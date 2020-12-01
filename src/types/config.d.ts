@@ -6,6 +6,7 @@ export interface PageBasicAuth {
 export type PageAuth = PageBasicAuth;
 
 export interface PageConfig {
+  name: string,
   url: string,
   interval: number,
   auth?: PageAuth
@@ -13,6 +14,15 @@ export interface PageConfig {
 
 export type PagesConfig = PageConfig[];
 
-export interface OutConfig {
+export interface FileOutput {
+  type: string,
   folder: string
+}
+
+export type ReportOutput = FileOutput;
+export type ReportOutputs = ReportOutput[];
+
+export type AppConfig = {
+  output: ReportOutputs,
+  workerInterval: number
 }

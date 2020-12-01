@@ -1,21 +1,20 @@
 import { catConfig } from './Logger';
-import fs from 'fs';
 import path from 'path';
 import { fileExists, readJson } from './../util/FileHandler'
 
-import { PagesConfig, OutConfig } from '../types/config'
+import { PagesConfig, AppConfig } from '../types/config'
 
 export default class Config {
+  private readonly APP_FILE_NAME: string = 'app.json';
   private readonly PAGE_FILE_NAME: string = 'pages.json';
-  private readonly OUT_FILE_NAME: string = 'output.json';
 
   private loadConfig: boolean;
   private rootDir: string;
   private pageFile: string;
-  private outFile: string;
+  private appFile: string;
 
   private pageConfig: PagesConfig;
-  private outConfig: OutConfig;
+  private appConfig: AppConfig;
 
   constructor(root: string = './config/') {
     catConfig.info(`Initiate new instance for configRoot: ${root}`);
@@ -23,9 +22,9 @@ export default class Config {
     this.loadConfig = false;
     this.rootDir = root;
     this.pageFile = path.join(this.rootDir, this.PAGE_FILE_NAME);
-    this.outFile = path.join(this.rootDir, this.OUT_FILE_NAME);
+    this.appFile = path.join(this.rootDir, this.APP_FILE_NAME);
     this.pageConfig = [];
-    this.outConfig = { "folder": "" };
+    this.appConfig = { output: [], workerInterval: 0 };
 
     catConfig.info(`Done initiating new instance for configRoot: ${root}`);
   }
@@ -34,14 +33,16 @@ export default class Config {
     return this.pageConfig;
   }
 
-  public getOut(): OutConfig {
-    return this.outConfig;
+  public getApp(): AppConfig {
+    return this.appConfig;
   }
 
-
+  public getWorkerSleepInterval(): number {
+    return this.appConfig.workerInterval;
+  }
 
   private _configFileExists(): boolean {
-    for (let cPath of [this.rootDir, this.pageFile, this.outFile]) {
+    for (let cPath of [this.rootDir, this.pageFile, this.appFile]) {
       catConfig.debug(`Verify if config path ${cPath} exists`);
       if (!(fileExists(cPath))) {
         catConfig.error(`Configuration path ${cPath} does not exists, please double check.`, new Error());
@@ -60,7 +61,7 @@ export default class Config {
       return false;
     }
 
-    const pageJson = readJson(this.pageFile);
+    const pageJson = readJson(this.pageFile) as PagesConfig;
     if (!pageJson) {
       catConfig.error(`Failed to load pageConfig`, new Error());
       return false;
@@ -68,13 +69,13 @@ export default class Config {
     this.pageConfig = pageJson
     catConfig.debug(`PageConfig: ${JSON.stringify(this.pageConfig)}`);
 
-    const outJson = readJson(this.outFile);
-    if (!outJson) {
+    const appJson = readJson(this.appFile) as AppConfig;
+    if (!appJson) {
       catConfig.error(`Failed to load outConfig`, new Error());
       return false;
     }
-    this.outConfig = outJson;
-    catConfig.debug(`OutConfig: ${JSON.stringify(this.outConfig)}`);
+    this.appConfig = appJson;
+    catConfig.debug(`AppConfig: ${JSON.stringify(this.appFile)}`);
 
 
     return true;
