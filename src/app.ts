@@ -1,5 +1,5 @@
 import path from 'path';
-import { catApp } from './Logger';
+import { catApp } from './util/Logger';
 import ReportMe from './ReportMe';
 
 

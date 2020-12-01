@@ -2,23 +2,7 @@ import { catConfig } from './Logger';
 import fs from 'fs';
 import path from 'path';
 
-interface PageBasicAuth {
-  user: string,
-  pwd: string
-}
-type PageAuth = PageBasicAuth;
-
-interface PageConfig {
-  url: string,
-  interval: number,
-  auth?: PageAuth
-}
-
-type PagesConfig = PageConfig[];
-
-interface OutConfig {
-  folder: string
-}
+import { PagesConfig, OutConfig, PageConfig} from '../types/config'
 
 export default class Config {
   private readonly PAGE_FILE_NAME: string = 'pages.json';

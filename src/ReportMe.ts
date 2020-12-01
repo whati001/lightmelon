@@ -1,5 +1,5 @@
-import { catRepMe } from './Logger';
-import Config from './Config';
+import { catRepMe } from './util/Logger';
+import Config from './util/ConfigLoader';
 
 export default class ReportMe {
   private config: Config;
