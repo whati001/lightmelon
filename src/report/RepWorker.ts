@@ -1,37 +1,31 @@
-import { OutConfig, PageAuth, PageConfig } from "../types/config";
 import { catRepWorker } from '../util/Logger'
 import moment from 'moment';
-import { writeFile } from "../util/FileHandler";
+import { writeRelativeFile } from "../util/FileHandler";
+import Queue from "../util/Queue";
+import { RepTask } from "../types/queue";
+import { sleep } from "../util/Utils";
+import { ReportOutputs } from '../types/config';
 
 // @ts-ignore
 const chromeLauncher = require('chrome-launcher');
 // @ts-ignore
 const lighthouse = require('lighthouse');
-// import { writeFile } from "../util/FileHandler";
 
 export default class RepWorker {
-  private url: string;
-  private interval: number;
-  private auth: PageAuth;
+  private queue: Queue<RepTask>;
+  private sleepInterval: number;
 
-  private resDir: string;
-  private isRunning: boolean;
-
-  constructor(pageConfig: PageConfig, outConfig: OutConfig) {
-    this.url = pageConfig.url;
-    this.interval = pageConfig.interval;
-    this.auth = { user: 'anoymous', pwd: 'anoymous' };
-    this.resDir = outConfig.folder;
-
-    this.isRunning = false;
+  constructor(sleepInterval: number, queue: Queue<RepTask>) {
+    this.sleepInterval = sleepInterval;
+    this.queue = queue;
   }
 
   // @ts-ignore
-  private async _getLigthouseReport(): string {
-    const chromeBrowser = await chromeLauncher.launch({ chromeFlags: [] });
+  private async _getLigthouseReport(url: string): string {
+    const chromeBrowser = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
 
     const options = { logLevel: 'info', output: 'html', onlyCategories: ['performance'], port: chromeBrowser.port };
-    const runnerResult = await lighthouse(this.url, options);
+    const runnerResult = await lighthouse(url, options);
 
     const report = runnerResult.report;
     await chromeBrowser.kill();
@@ -39,31 +33,47 @@ export default class RepWorker {
     return report;
   }
 
-  public async createReport(): Promise<boolean> {
-    if (this.isRunning) {
-      catRepWorker.warn(`Still a old report geneartion is running, please set interval for page ${this.url} heigher`);
-      return false;
+  private async _storeReport(report: string, name: string, timeStamp: string, outputs: ReportOutputs) {
+    console.log(outputs);
+    for (let output of outputs) {
+      catRepWorker.info(`Ouput report to ${JSON.stringify(output)}`);
+      console.log(output);
+      switch (output.type) {
+        case 'file': {
+          const dstDir = output.folder;
+          // const resJson: string = `resJson_${url}_${timeStamp}.json`;
+          const resHtml: string = `resHtml_${name}_${timeStamp}.html`;
+          writeRelativeFile(`./../${dstDir}/${resHtml}`, report);
+          break;
+        }
+        default:
+          break;
+      }
     }
-    this.isRunning = true;
+  }
+
+  public async createReport(task: RepTask): Promise<boolean> {
     const timeStamp: string = moment().format('YYYYMMDD-hmmss');
-    catRepWorker.info(`Start creating new report for url ${this.url} at ${timeStamp}`);
+    catRepWorker.info(`Start creating new report for url ${task.url} at ${timeStamp}`);
 
-    const resJson: string = `resJson_${this.url}_${timeStamp}.json`;
-    const resHtml: string = `resHtml_${timeStamp}.html`;
+    console.log(task);
+    const report = await this._getLigthouseReport(task.url);
+    await this._storeReport(report, task.name, timeStamp, task.output);
 
-    const report = await this._getLigthouseReport();
-    console.log(report);
-
-    catRepWorker.info(`Finished creating report for url: ${this.url} -> Result[json: ${resJson}, html: ${resHtml}]`);
-    this.isRunning = false;
+    catRepWorker.info(`Finished creating report for url: ${task.url}s`);
     return true;
   }
 
-
   public async start() {
     while (true) {
-      await this.createReport();
-      await this._sleep(this.interval);
+      if (this.queue.size() == 0) {
+        await sleep(this.sleepInterval);
+      } else {
+        const task = this.queue.dequeue();
+        if (task) {
+          await this.createReport(task);
+        }
+      }
     }
   }
 }

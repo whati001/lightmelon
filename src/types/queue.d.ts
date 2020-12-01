@@ -1,3 +1,5 @@
+import { ReportOutputs } from './config';
+
 export interface IQueue<T> {
   enqueue(item: T): void;
   dequeue(): T | undefined;
@@ -5,6 +7,7 @@ export interface IQueue<T> {
 }
 
 export interface RepTask {
+  name: string,
   url: string;
-  dstDir: string;
+  output: ReportOutputs;
 }
