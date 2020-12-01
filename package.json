@@ -30,6 +30,7 @@
   "dependencies": {
     "chrome-launcher": "^0.13.4",
     "lighthouse": "^6.4.1",
+    "moment": "^2.29.1",
     "ts-deepcopy": "^0.1.4",
     "typescript-logging": "^1.0.0"
   }

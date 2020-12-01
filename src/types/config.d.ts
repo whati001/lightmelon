@@ -6,6 +6,7 @@ export interface PageBasicAuth {
 export type PageAuth = PageBasicAuth;
 
 export interface PageConfig {
+  name: string,
   url: string,
   interval: number,
   auth?: PageAuth

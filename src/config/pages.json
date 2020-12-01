@@ -1,9 +1,11 @@
 [
   {
+    "name": "fischRehKa",
     "url": "https://fisch.rehka.dev",
     "interval": 5000
   },
   {
+    "name": "google",
     "url": "https://google.com",
     "interval": 1000
   }
