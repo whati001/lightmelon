@@ -6,5 +6,6 @@ CategoryServiceFactory.setDefaultConfiguration(new CategoryConfiguration(LogLeve
 
 // register categories
 export const catApp = new Category('app');
-export const catRepMe = new Category('reportme', catApp);
+export const catRepDriver = new Category('rep-driver', catApp);
 export const catConfig = new Category('config', catApp);
+export const catRepWorker = new Category('rep-worker', catApp);

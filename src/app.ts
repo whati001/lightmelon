@@ -1,6 +1,6 @@
 import path from 'path';
 import { catApp } from './util/Logger';
-import ReportMe from './ReportMe';
+import RepDriver from './report/RepDriver';
 
 
 const getConfigRoot = (): string => {
@@ -9,7 +9,7 @@ const getConfigRoot = (): string => {
 
 (() => {
   catApp.info('Staring app in progress...');
-  const repMe = new ReportMe(getConfigRoot());
+  const repMe = new RepDriver(getConfigRoot());
   repMe.init();
   repMe.run();
   catApp.info('Stopping app in progress...');

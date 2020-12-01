@@ -1,6 +1,10 @@
 [
   {
     "url": "https://fisch.rehka.dev",
-    "interval": "1m"
+    "interval": 5000
+  },
+  {
+    "url": "https://google.com",
+    "interval": 1000
   }
 ]

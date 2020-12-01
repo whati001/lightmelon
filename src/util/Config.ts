@@ -1,8 +1,9 @@
 import { catConfig } from './Logger';
 import fs from 'fs';
 import path from 'path';
+import { fileExists, readJson } from './../util/FileHandler'
 
-import { PagesConfig, OutConfig, PageConfig} from '../types/config'
+import { PagesConfig, OutConfig } from '../types/config'
 
 export default class Config {
   private readonly PAGE_FILE_NAME: string = 'pages.json';
@@ -29,14 +30,20 @@ export default class Config {
     catConfig.info(`Done initiating new instance for configRoot: ${root}`);
   }
 
-  private _fileExists(path: string): boolean {
-    return fs.existsSync(path);
+  public getPages(): PagesConfig {
+    return this.pageConfig;
   }
+
+  public getOut(): OutConfig {
+    return this.outConfig;
+  }
+
+
 
   private _configFileExists(): boolean {
     for (let cPath of [this.rootDir, this.pageFile, this.outFile]) {
       catConfig.debug(`Verify if config path ${cPath} exists`);
-      if (!this._fileExists(cPath)) {
+      if (!(fileExists(cPath))) {
         catConfig.error(`Configuration path ${cPath} does not exists, please double check.`, new Error());
       }
     }
@@ -53,24 +60,22 @@ export default class Config {
       return false;
     }
 
-    const pagePayload = fs.readFileSync(this.pageFile);
-    if (pagePayload) {
-      this.pageConfig = JSON.parse(pagePayload.toString());
-      catConfig.debug(`PageConfig: ${JSON.stringify(this.pageConfig)}`);
-      if (!this.pageConfig) {
-        catConfig.error('Failed to read pageConfig', new Error());
-        return false;
-      }
+    const pageJson = readJson(this.pageFile);
+    if (!pageJson) {
+      catConfig.error(`Failed to load pageConfig`, new Error());
+      return false;
     }
-    const outPayload = fs.readFileSync(this.outFile);
-    if (outPayload) {
-      this.outConfig = JSON.parse(outPayload.toString());
-      catConfig.debug(`OutConfig: ${JSON.stringify(this.outConfig)}`);
-      if (!this.outConfig) {
-        catConfig.error('Failed to read outConfig', new Error());
-        return false;
-      }
+    this.pageConfig = pageJson
+    catConfig.debug(`PageConfig: ${JSON.stringify(this.pageConfig)}`);
+
+    const outJson = readJson(this.outFile);
+    if (!outJson) {
+      catConfig.error(`Failed to load outConfig`, new Error());
+      return false;
     }
+    this.outConfig = outJson;
+    catConfig.debug(`OutConfig: ${JSON.stringify(this.outConfig)}`);
+
 
     return true;
   }
