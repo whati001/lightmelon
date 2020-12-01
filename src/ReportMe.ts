@@ -5,11 +5,18 @@ export default class ReportMe {
   private config: Config;
 
   constructor(cRoot: string) {
-    catRepMe.info('Initate new ReportMe instance');
     this.config = new Config(cRoot);
-    this.config.readConfig();
+    catRepMe.info('Created new ReportMe instance, please init() before use.');
+  }
 
-    catRepMe.info('Initate new ReportMe instance done');
+  public init(): boolean {
+    catRepMe.info('Start init ReportMe instance.');
+    if (!this.config.readConfig()) {
+      return false;
+    }
+    
+    catRepMe.info('Done init ReportMe instance.');
+    return true;
   }
 
   public run() {

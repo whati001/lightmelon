@@ -8,10 +8,9 @@ const getConfigRoot = (): string => {
 }
 
 (() => {
-  catApp.info('Starting ReportMe app in progress...');
-
+  catApp.info('Staring app in progress...');
   const repMe = new ReportMe(getConfigRoot());
-
-  catApp.info('Initation done, start running reports')
+  repMe.init();
   repMe.run();
+  catApp.info('Stopping app in progress...');
 })();

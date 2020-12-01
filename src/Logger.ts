@@ -1,7 +1,7 @@
 import { Category, CategoryServiceFactory, CategoryConfiguration, LogLevel } from "typescript-logging";
 
 // create new logger instance
-CategoryServiceFactory.setDefaultConfiguration(new CategoryConfiguration(LogLevel.Info));
+CategoryServiceFactory.setDefaultConfiguration(new CategoryConfiguration(LogLevel.Debug));
 
 
 // register categories
