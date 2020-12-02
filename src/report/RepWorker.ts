@@ -21,29 +21,26 @@ export default class RepWorker {
   }
 
   // @ts-ignore
-  private async _getLigthouseReport(url: string): string {
+  private async _getLigthouseReport(url: string): any {
     const chromeBrowser = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
 
     const options = { logLevel: 'info', output: 'html', onlyCategories: ['performance'], port: chromeBrowser.port };
     const runnerResult = await lighthouse(url, options);
 
-    const report = runnerResult.report;
     await chromeBrowser.kill();
 
-    return report;
+    return runnerResult;
   }
 
   private async _storeReport(report: string, name: string, timeStamp: string, outputs: ReportOutputs) {
     console.log(outputs);
     for (let output of outputs) {
       catRepWorker.info(`Ouput report to ${JSON.stringify(output)}`);
-      console.log(output);
+
       switch (output.type) {
         case 'file': {
           const dstDir = output.folder;
-          // const resJson: string = `resJson_${url}_${timeStamp}.json`;
-          const resHtml: string = `resHtml_${name}_${timeStamp}.html`;
-          writeRelativeFile(`./../${dstDir}/${resHtml}`, report);
+          writeRelativeFile(`./../${dstDir}/${name}`, report);
           break;
         }
         default:
@@ -56,9 +53,11 @@ export default class RepWorker {
     const timeStamp: string = moment().format('YYYYMMDD-hmmss');
     catRepWorker.info(`Start creating new report for url ${task.url} at ${timeStamp}`);
 
-    console.log(task);
-    const report = await this._getLigthouseReport(task.url);
-    await this._storeReport(report, task.name, timeStamp, task.output);
+    const repResult = await this._getLigthouseReport(task.url);
+    const resHtml: string = `resHtml_${task.name}_${timeStamp}.html`;
+    await this._storeReport(repResult.report, resHtml, timeStamp, task.output);
+    const resJson: string = `resJson_${task.name}_${timeStamp}.json`;
+    await this._storeReport(JSON.stringify(repResult.lhr), resJson, timeStamp, task.output);
 
     catRepWorker.info(`Finished creating report for url: ${task.url}s`);
     return true;
