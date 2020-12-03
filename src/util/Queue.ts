@@ -8,7 +8,7 @@ export default class Queue<T> implements IQueue<T> {
 
   public enqueue(item: T): void {
     if (this.size() === this.capacity) {
-      catQueue.warn(`Queue has reached max capacity, job get ignored`);
+      catQueue.warn('Queue has reached max capacity, job get ignored');
     }
     catQueue.info(`New task enqueue: ${JSON.stringify(item)}`);
     this.storage.push(item);

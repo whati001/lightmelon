@@ -1,8 +1,8 @@
 import { catConfig } from './Logger';
 import path from 'path';
-import { fileExists, readJson } from './../util/FileHandler'
+import { fileExists, readJson } from './../util/FileHandler';
 
-import { PagesConfig, AppConfig, BrowserConfig } from '../types/config'
+import { PagesConfig, AppConfig, BrowserConfig, PageConfig } from '../types/config';
 
 export default class Config {
   private readonly APP_FILE_NAME: string = 'app.json';
@@ -60,22 +60,22 @@ export default class Config {
       return true;
     }
 
-    catConfig.info('Start reading config')
+    catConfig.info('Start reading config');
     if (!this._configFileExists()) {
       return false;
     }
 
-    const pageJson = readJson(this.pageFile) as PagesConfig;
+    const pageJson = readJson<PagesConfig>(this.pageFile);
     if (!pageJson) {
-      catConfig.error(`Failed to load pageConfig`, new Error());
+      catConfig.error('Failed to load pageConfig', new Error());
       return false;
     }
-    this.pageConfig = pageJson
+    this.pageConfig = pageJson;
     catConfig.debug(`PageConfig: ${JSON.stringify(this.pageConfig)}`);
 
-    const appJson = readJson(this.appFile) as AppConfig;
+    const appJson = readJson<AppConfig>(this.appFile);
     if (!appJson) {
-      catConfig.error(`Failed to load outConfig`, new Error());
+      catConfig.error('Failed to load outConfig', new Error());
       return false;
     }
     this.appConfig = appJson;

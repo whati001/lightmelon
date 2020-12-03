@@ -1,9 +1,9 @@
-import { catRepWorker } from '../util/Logger'
+import { catRepWorker } from '../util/Logger';
 import moment from 'moment';
-import { writeRelativeFile } from "../util/FileHandler";
-import Queue from "../util/Queue";
-import { RepTask } from "../types/queue";
-import { sleep } from "../util/Utils";
+import { writeRelativeFile } from '../util/FileHandler';
+import Queue from '../util/Queue';
+import { RepTask } from '../types/queue';
+import { sleep } from '../util/Utils';
 import { BrowserConfig, ReportOutputs } from '../types/config';
 
 // @ts-ignore
@@ -23,9 +23,9 @@ export default class RepWorker {
   }
 
   private _getBrowserConfig(config: BrowserConfig) {
-    const res: any = {}
+    const res: any = {};
     if (config.headless) {
-      res['chromeFlags'] = ['--headless']
+      res['chromeFlags'] = ['--headless'];
     }
     res['userDataDir'] = config.userProfile;
     return res;

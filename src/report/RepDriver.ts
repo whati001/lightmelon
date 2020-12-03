@@ -39,7 +39,7 @@ export default class RepDriver {
     const outputs = this.config.getApp().output;
     for (let page of pages) {
       const task = setInterval((queue: Queue<RepTask>, pageConfig: PageConfig, outputs: ReportOutputs) => {
-        const task: RepTask = { name: pageConfig.name, url: pageConfig.url, output: outputs }
+        const task: RepTask = { name: pageConfig.name, url: pageConfig.url, output: outputs };
         queue.enqueue(task);
       }, page.interval, this.queue, page, outputs);
       catRepDriver.info(`New import task created for ${page.url} and interval: ${page.interval}`);

@@ -1,13 +1,13 @@
 {
-  "name": "reportme",
+  "name": "lightmelon",
   "version": "1.0.0",
   "description": "Nodejs app, which continually generates page performance reports",
   "main": "app.js",
   "scripts": {
+    "start": "ts-node ./src/app.ts",
     "watch": "nodemon ./src/app.ts",
     "build": "tsc --project ./",
-    "lint": "eslint src/*",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --fix"
   },
   "repository": {
     "type": "git",
@@ -31,7 +31,6 @@
     "chrome-launcher": "^0.13.4",
     "lighthouse": "^6.4.1",
     "moment": "^2.29.1",
-    "ts-deepcopy": "^0.1.4",
     "typescript-logging": "^1.0.0"
   }
 }
