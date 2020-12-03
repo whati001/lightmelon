@@ -4,7 +4,7 @@ import { writeRelativeFile } from "../util/FileHandler";
 import Queue from "../util/Queue";
 import { RepTask } from "../types/queue";
 import { sleep } from "../util/Utils";
-import { ReportOutputs } from '../types/config';
+import { BrowserConfig, ReportOutputs } from '../types/config';
 
 // @ts-ignore
 const chromeLauncher = require('chrome-launcher');
@@ -14,17 +14,28 @@ const lighthouse = require('lighthouse');
 export default class RepWorker {
   private queue: Queue<RepTask>;
   private sleepInterval: number;
+  private browserConfig: BrowserConfig;
 
-  constructor(sleepInterval: number, queue: Queue<RepTask>) {
+  constructor(sleepInterval: number, browserConfig: BrowserConfig, queue: Queue<RepTask>) {
     this.sleepInterval = sleepInterval;
     this.queue = queue;
+    this.browserConfig = this._getBrowserConfig(browserConfig);
+  }
+
+  private _getBrowserConfig(config: BrowserConfig) {
+    const res: any = {}
+    if (config.headless) {
+      res['chromeFlags'] = ['--headless']
+    }
+    res['userDataDir'] = config.userProfile;
+    return res;
   }
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
-    const chromeBrowser = await chromeLauncher.launch({ chromeFlags: ['--headless'] });
+    const chromeBrowser = await chromeLauncher.launch(this.browserConfig);
 
-    const options = { logLevel: 'info', output: 'html', onlyCategories: ['performance'], port: chromeBrowser.port };
+    const options = { logLevel: 'info', output: ['html', 'json'], port: chromeBrowser.port };
     const runnerResult = await lighthouse(url, options);
 
     await chromeBrowser.kill();
@@ -33,7 +44,6 @@ export default class RepWorker {
   }
 
   private async _storeReport(report: string, name: string, timeStamp: string, outputs: ReportOutputs) {
-    console.log(outputs);
     for (let output of outputs) {
       catRepWorker.info(`Ouput report to ${JSON.stringify(output)}`);
 
@@ -55,9 +65,9 @@ export default class RepWorker {
 
     const repResult = await this._getLigthouseReport(task.url);
     const resHtml: string = `resHtml_${task.name}_${timeStamp}.html`;
-    await this._storeReport(repResult.report, resHtml, timeStamp, task.output);
+    await this._storeReport(repResult.report[0], resHtml, timeStamp, task.output);
     const resJson: string = `resJson_${task.name}_${timeStamp}.json`;
-    await this._storeReport(JSON.stringify(repResult.lhr), resJson, timeStamp, task.output);
+    await this._storeReport(repResult.report[1], resJson, timeStamp, task.output);
 
     catRepWorker.info(`Finished creating report for url: ${task.url}s`);
     return true;

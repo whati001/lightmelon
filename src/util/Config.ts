@@ -2,7 +2,7 @@ import { catConfig } from './Logger';
 import path from 'path';
 import { fileExists, readJson } from './../util/FileHandler'
 
-import { PagesConfig, AppConfig } from '../types/config'
+import { PagesConfig, AppConfig, BrowserConfig } from '../types/config'
 
 export default class Config {
   private readonly APP_FILE_NAME: string = 'app.json';
@@ -24,7 +24,7 @@ export default class Config {
     this.pageFile = path.join(this.rootDir, this.PAGE_FILE_NAME);
     this.appFile = path.join(this.rootDir, this.APP_FILE_NAME);
     this.pageConfig = [];
-    this.appConfig = { output: [], workerInterval: 0 };
+    this.appConfig = { output: [], workerInterval: 0, browser: { headless: false, userProfile: false } };
 
     catConfig.info(`Done initiating new instance for configRoot: ${root}`);
   }
@@ -35,6 +35,10 @@ export default class Config {
 
   public getApp(): AppConfig {
     return this.appConfig;
+  }
+
+  public getBrowser(): BrowserConfig {
+    return this.appConfig.browser;
   }
 
   public getWorkerSleepInterval(): number {

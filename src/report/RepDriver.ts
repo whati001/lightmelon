@@ -15,7 +15,7 @@ export default class RepDriver {
     this.config = new Config(cRoot);
     this.tasks = [];
     this.queue = new Queue<RepTask>(50);
-    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.queue);
+    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
 
     catRepDriver.info('Created new RepDriver instance, please init() before use.');
   }

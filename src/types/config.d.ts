@@ -22,7 +22,13 @@ export interface FileOutput {
 export type ReportOutput = FileOutput;
 export type ReportOutputs = ReportOutput[];
 
+
+export interface BrowserConfig {
+  headless: boolean,
+  userProfile: string | boolean
+}
 export type AppConfig = {
   output: ReportOutputs,
-  workerInterval: number
+  workerInterval: number,
+  browser: BrowserConfig
 }

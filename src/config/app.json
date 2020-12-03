@@ -5,5 +5,9 @@
       "folder": "./result/"
     }
   ],
-  "workerInterval": 1000
+  "workerInterval": 1000,
+  "browser": {
+    "headless": false,
+    "userProfile": "/home/akarner/.config/google-chrome/Default"
+  }
 }
