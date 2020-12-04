@@ -24,16 +24,21 @@ export default class RepWorker {
   }
 
   private _getBrowserConfig(config: BrowserConfig) {
-    const res: any = {};
+    const res: any = {
+      'chromeFlags': []
+    };
+    res['userDataDir'] = config.profilePath;
+    res['chromeFlags'].push(`--profile-directory=${config.userProfile}`)
     if (config.headless) {
-      res['chromeFlags'] = ['--headless'];
+      res['chromeFlags'].push('--headless');
     }
-    res['userDataDir'] = config.userProfile;
+
     return res;
   }
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
+    console.log(this.browserConfig);
     const chromeBrowser = await chromeLauncher.launch(this.browserConfig);
 
     const options = { logLevel: 'info', output: ['html', 'json'], port: chromeBrowser.port };

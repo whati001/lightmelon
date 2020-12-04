@@ -24,7 +24,7 @@ export default class Config {
     this.pageFile = path.join(this.rootDir, this.PAGE_FILE_NAME);
     this.appFile = path.join(this.rootDir, this.APP_FILE_NAME);
     this.pageConfig = [];
-    this.appConfig = { output: [], workerInterval: 0, browser: { headless: false, userProfile: '' } };
+    this.appConfig = { output: [], workerInterval: 0, browser: { headless: false, profilePath: '', userProfile: '' } };
 
     catConfig.info(`Done initiating new instance for configRoot: ${root}`);
   }

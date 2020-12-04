@@ -8,6 +8,7 @@
   "workerInterval": 1000,
   "browser": {
     "headless": false,
-    "userProfile": "/home/akarner/.config/google-chrome/"
+    "profilePath": "/home/akarner/.config/google-chrome/",
+    "userProfile": "Default"
   }
 }

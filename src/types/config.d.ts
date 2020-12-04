@@ -25,6 +25,7 @@ export type ReportOutputs = ReportOutput[];
 
 export interface BrowserConfig {
   headless: boolean,
+  profilePath: string,
   userProfile: string
 }
 export type AppConfig = {
