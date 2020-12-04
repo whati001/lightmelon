@@ -27,11 +27,9 @@ export default class RepWorker {
     const res: any = {
       'chromeFlags': []
     };
+    res['chromePath'] = config.executable;
     res['userDataDir'] = config.profilePath;
     res['chromeFlags'].push(`--profile-directory=${config.userProfile}`)
-    if (config.headless) {
-      res['chromeFlags'].push('--headless');
-    }
 
     return res;
   }

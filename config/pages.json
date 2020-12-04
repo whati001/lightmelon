@@ -1,12 +1,12 @@
 [
   {
-    "name": "fischRehKa",
-    "url": "https://fisch.rehka.dev",
-    "interval": 20000
+    "name": "google",
+    "url": "https://google.com",
+    "interval": 10000
   },
   {
-    "name": "powerbi",
-    "url": "https://app.powerbi.com",
-    "interval": 9000
+    "name": "rehkaFish",
+    "url": "fisch.rehka.dev",
+    "interval": 20000
   }
 ]

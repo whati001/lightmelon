@@ -7,8 +7,8 @@
   ],
   "workerInterval": 1000,
   "browser": {
-    "headless": false,
-    "profilePath": "/home/akarner/.config/google-chrome/",
+    "executable": "C:\\Users\\akarner\\offside\\chrome-win\\chrome.exe",
+    "profilePath": "C:\\Users\\akarner\\AppData\\Local\\Chromium\\User Data\\",
     "userProfile": "Default"
   }
 }
