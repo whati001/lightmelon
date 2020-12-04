@@ -1,6 +1,8 @@
 # Lightmelon
 Simple task runner to validate webpage performance continuesly with [Google Chrome Lighthouse](https://developers.google.com/web/tools/lighthouse/).
 
+Please consider that this project is still in beta. Hence, it may break by running it as a long time job.
+
 ## Getting Started
 To get a local copy up and running follow these simple steps.
 
@@ -19,6 +21,11 @@ apt install nodejs npm
 # RHEL
 yum install rh-nodejs
 ```
+
+### Configuration
+The app uses two different configuration files. `app.json` includes everything related to the app itself. Like how to output the reports, worker sleep interval, browser configuration and so forth. Normally there is no need to change much in this file.
+`pages.json` includes an array of pages to test. This file is more of interrest for the user and should be adopted as needed.
+
 
 ### Installation
 
