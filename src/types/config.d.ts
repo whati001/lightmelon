@@ -25,7 +25,7 @@ export type ReportOutputs = ReportOutput[];
 
 export interface BrowserConfig {
   headless: boolean,
-  userProfile: string | boolean
+  userProfile: string
 }
 export type AppConfig = {
   output: ReportOutputs,
