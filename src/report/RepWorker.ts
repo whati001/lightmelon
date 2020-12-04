@@ -20,6 +20,7 @@ export default class RepWorker {
     this.sleepInterval = sleepInterval;
     this.queue = queue;
     this.browserConfig = this._getBrowserConfig(browserConfig);
+    catRepWorker.info(JSON.stringify(browserConfig));
   }
 
   private _getBrowserConfig(config: BrowserConfig) {

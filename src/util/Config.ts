@@ -79,7 +79,7 @@ export default class Config {
       return false;
     }
     this.appConfig = appJson;
-    catConfig.debug(`AppConfig: ${JSON.stringify(this.appFile)}`);
+    catConfig.debug(`AppConfig: ${JSON.stringify(this.appConfig)}`);
 
 
     return true;

@@ -9,14 +9,13 @@ export default class RepDriver {
   private config: Config;
   private tasks: any[];
   private queue: Queue<RepTask>;
-  private worker: RepWorker;
+  private worker: RepWorker | undefined;
 
   constructor(cRoot: string) {
     this.config = new Config(cRoot);
     this.tasks = [];
     this.queue = new Queue<RepTask>(50);
-    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
-
+    this.worker = undefined;
     catRepDriver.info('Created new RepDriver instance, please init() before use.');
   }
 
@@ -26,6 +25,7 @@ export default class RepDriver {
       return false;
     }
 
+    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
     catRepDriver.info('Done init RepDriver instance.');
     return true;
   }
@@ -33,7 +33,9 @@ export default class RepDriver {
   public run() {
     const startDateTime: Date = new Date();
     catRepDriver.info(`Started app at ${startDateTime}`);
-    this.worker.start();
+
+    if (this.worker)
+      this.worker.start();
 
     const pages = this.config.getPages();
     const outputs = this.config.getApp().output;
