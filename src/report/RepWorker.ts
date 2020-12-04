@@ -1,6 +1,6 @@
 import { catRepWorker } from '../util/Logger';
 import moment from 'moment';
-import { writeRelativeFile } from '../util/FileHandler';
+import { writeRelativeToApp } from '../util/FileHandler';
 import Queue from '../util/Queue';
 import { RepTask } from '../types/queue';
 import { sleep } from '../util/Utils';
@@ -50,7 +50,7 @@ export default class RepWorker {
       switch (output.type) {
         case 'file': {
           const dstDir = output.folder;
-          writeRelativeFile(`./../${dstDir}/${name}`, report);
+          writeRelativeToApp(`${dstDir}/${name}`, report);
           break;
         }
         default:
