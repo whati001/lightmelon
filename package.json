@@ -31,6 +31,7 @@
     "chrome-launcher": "^0.13.4",
     "lighthouse": "^6.4.1",
     "moment": "^2.29.1",
+    "nexe": "^3.3.7",
     "typescript-logging": "^1.0.0"
   }
 }
