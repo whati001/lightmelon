@@ -1,3 +1,4 @@
+
 # Lightmelon
 Simple task runner to validate webpage performance continuesly with [Google Chrome Lighthouse](https://developers.google.com/web/tools/lighthouse/).
 
@@ -26,6 +27,43 @@ yum install rh-nodejs
 The app uses two different configuration files. `app.json` includes everything related to the app itself. Like how to output the reports, worker sleep interval, browser configuration and so forth. Normally there is no need to change much in this file.
 `pages.json` includes an array of pages to test. This file is more of interrest for the user and should be adopted as needed.
 
+#### app.json
+!!! in beta, only file output is supported and without headless. 
+Please just update the profilePath and userProfile.
+```json
+{
+  "output": [
+    {
+      "type": "file",
+      "folder": "./result/"
+    }
+  ],
+  "workerInterval": 1000,
+  "browser": {
+    "headless": false,
+    "profilePath": "C:\\Users\\akarner\\AppData\\Local\\Google\\Chrome\\User Data",
+    "userProfile": "Default"
+  }
+}
+```
+
+#### pages.json
+Please define some pages to validate. Please consider that if you need authentication, that you logged in first.
+```json
+[
+  {
+    "name": "fischRehKa",
+    "url": "https://fisch.rehka.dev",
+    "interval": 20000
+  },
+  {
+    "name": "powerbi",
+    "url": "https://app.powerbi.com",
+    "interval": 9000
+  }
+]
+
+```
 
 ### Installation
 
