@@ -14,6 +14,7 @@ const lighthouse = require('lighthouse');
 export default class RepWorker {
   private queue: Queue<RepTask>;
   private sleepInterval: number;
+  private browser: any;
   private browserExec: BrowserConfig;
 
   constructor(sleepInterval: number, browserExec: BrowserConfig, queue: Queue<RepTask>) {
@@ -24,15 +25,15 @@ export default class RepWorker {
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
-    console.log(this.browserExec);
-    const chromeBrowser = await chromeLauncher.launch({
+    this.browser = await chromeLauncher.launch({
       browserExec: this.browserExec,
       chromeFlags: ['--headfull', '--disable-gpu']
     });
 
-    const options = { logLevel: 'info', output: ['html', 'json'], port: chromeBrowser.port };
+    const options = { logLevel: 'info', output: ['html', 'json'], port: this.browser.port };
     const runnerResult = await lighthouse(url, options);
-    await chromeBrowser.kill();
+    await this.browser.kill();
+    this.browser = undefined;
 
     return runnerResult;
   }
@@ -66,6 +67,13 @@ export default class RepWorker {
 
     catRepWorker.info(`Finished creating report for url: ${task.url}s`);
     return true;
+  }
+
+  public async kill() {
+    this.queue.clear();
+    if (this.browser) {
+      await this.browser.kill();
+    }
   }
 
   public async start() {

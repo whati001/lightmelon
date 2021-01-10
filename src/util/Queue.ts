@@ -20,6 +20,10 @@ export default class Queue<T> implements IQueue<T> {
     return item;
   }
 
+  public clear() {
+    this.storage = [];
+  }
+
   public size(): number {
     return this.storage.length;
   }
