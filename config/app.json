@@ -6,9 +6,5 @@
     }
   ],
   "workerInterval": 1000,
-  "browser": {
-    "executable": "C:\\Users\\akarner\\offside\\chrome-win\\chrome.exe",
-    "profilePath": "C:\\Users\\akarner\\AppData\\Local\\Chromium\\User Data\\",
-    "userProfile": "Default"
-  }
+  "browserExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 }

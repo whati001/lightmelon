@@ -1,6 +1,5 @@
 import { catConfig } from './Logger';
-import path from 'path';
-import { fileExists, readJson } from './../util/FileHandler';
+import { fileExists, readJson, resolveRelativeToApp, resolveRelativeToFile } from './../util/FileHandler';
 
 import { PagesConfig, AppConfig, BrowserConfig, PageConfig } from '../types/config';
 
@@ -21,10 +20,10 @@ export default class Config {
 
     this.loadConfig = false;
     this.rootDir = root;
-    this.pageFile = path.join(this.rootDir, this.PAGE_FILE_NAME);
-    this.appFile = path.join(this.rootDir, this.APP_FILE_NAME);
+    this.pageFile = resolveRelativeToApp(this.rootDir, this.PAGE_FILE_NAME);
+    this.appFile = resolveRelativeToApp(this.rootDir, this.APP_FILE_NAME);
     this.pageConfig = [];
-    this.appConfig = { output: [], workerInterval: 0, browser: { executable: '', profilePath: '', userProfile: '' } };
+    this.appConfig = { output: [], workerInterval: 0, browserExecutable: '' };
 
     catConfig.info(`Done initiating new instance for configRoot: ${root}`);
   }
@@ -38,7 +37,7 @@ export default class Config {
   }
 
   public getBrowser(): BrowserConfig {
-    return this.appConfig.browser;
+    return this.appConfig.browserExecutable;
   }
 
   public getWorkerSleepInterval(): number {
@@ -46,11 +45,19 @@ export default class Config {
   }
 
   private _configFileExists(): boolean {
-    for (let cPath of [this.rootDir, this.pageFile, this.appFile]) {
+    for (let cPath of [this.pageFile, this.appFile]) {
       catConfig.debug(`Verify if config path ${cPath} exists`);
       if (!(fileExists(cPath))) {
         catConfig.error(`Configuration path ${cPath} does not exists, please double check.`, new Error());
       }
+    }
+    return true;
+  }
+
+  private _validateConfig(): boolean {
+    if (!fileExists(this.appConfig.browserExecutable)) {
+      catConfig.error('Browser executable not found', new Error('Invalid BrowserEXE'));
+      return false;
     }
     return true;
   }
@@ -81,7 +88,6 @@ export default class Config {
     this.appConfig = appJson;
     catConfig.debug(`AppConfig: ${JSON.stringify(this.appConfig)}`);
 
-
-    return true;
+    return this._validateConfig();
   }
 }

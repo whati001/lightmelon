@@ -1,6 +1,6 @@
 import { catRepWorker } from '../util/Logger';
 import moment from 'moment';
-import { writeRelativeToApp } from '../util/FileHandler';
+import { createFolder, writeRelativeToApp } from '../util/FileHandler';
 import Queue from '../util/Queue';
 import { RepTask } from '../types/queue';
 import { sleep } from '../util/Utils';
@@ -14,34 +14,24 @@ const lighthouse = require('lighthouse');
 export default class RepWorker {
   private queue: Queue<RepTask>;
   private sleepInterval: number;
-  private browserConfig: BrowserConfig;
+  private browserExec: BrowserConfig;
 
-  constructor(sleepInterval: number, browserConfig: BrowserConfig, queue: Queue<RepTask>) {
+  constructor(sleepInterval: number, browserExec: BrowserConfig, queue: Queue<RepTask>) {
     this.sleepInterval = sleepInterval;
     this.queue = queue;
-    this.browserConfig = this._getBrowserConfig(browserConfig);
-    catRepWorker.info(JSON.stringify(browserConfig));
-  }
-
-  private _getBrowserConfig(config: BrowserConfig) {
-    const res: any = {
-      'chromeFlags': []
-    };
-    res['chromePath'] = config.executable;
-    res['userDataDir'] = config.profilePath;
-    res['chromeFlags'].push(`--profile-directory=${config.userProfile}`)
-
-    return res;
+    this.browserExec = browserExec;
   }
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
-    console.log(this.browserConfig);
-    const chromeBrowser = await chromeLauncher.launch(this.browserConfig);
+    console.log(this.browserExec);
+    const chromeBrowser = await chromeLauncher.launch({
+      browserExec: this.browserExec,
+      chromeFlags: ['--headfull', '--disable-gpu']
+    });
 
     const options = { logLevel: 'info', output: ['html', 'json'], port: chromeBrowser.port };
     const runnerResult = await lighthouse(url, options);
-
     await chromeBrowser.kill();
 
     return runnerResult;
@@ -54,6 +44,7 @@ export default class RepWorker {
       switch (output.type) {
         case 'file': {
           const dstDir = output.folder;
+          createFolder(dstDir);
           writeRelativeToApp(`${dstDir}/${name}`, report);
           break;
         }

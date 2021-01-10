@@ -1,4 +1,4 @@
-import { catRepDriver } from '../util/Logger';
+import { catApp, catRepDriver } from '../util/Logger';
 import Config from '../util/Config';
 import RepWorker from './RepWorker';
 import Queue from '../util/Queue';
@@ -19,6 +19,17 @@ export default class RepDriver {
     catRepDriver.info('Created new RepDriver instance, please init() before use.');
   }
 
+  private _registerSignalHandler(): boolean {
+    catRepDriver.info('Start register process signal handler');
+    process.on('SIGINT', () => {
+      catRepDriver.info('Shutdown App started');
+      console.log(this.worker);
+    });
+
+    catRepDriver.info('Done register process signal handler');
+    return true;
+  }
+
   public init(): boolean {
     catRepDriver.info('Start init RepDriver instance.');
     if (!this.config.readConfig()) {
@@ -27,16 +38,19 @@ export default class RepDriver {
 
     this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
     catRepDriver.info('Done init RepDriver instance.');
-    return true;
+
+    
+    return this._registerSignalHandler();
   }
 
   public run() {
     const startDateTime: Date = new Date();
     catRepDriver.info(`Started app at ${startDateTime}`);
 
-    if (this.worker)
+    if (this.worker) {
       this.worker.start();
-
+    }
+    
     const pages = this.config.getPages();
     const outputs = this.config.getApp().output;
     for (let page of pages) {
