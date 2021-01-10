@@ -14,24 +14,25 @@ const lighthouse = require('lighthouse');
 export default class RepWorker {
   private queue: Queue<RepTask>;
   private sleepInterval: number;
-  private browser: any;
-  private browserExec: BrowserConfig;
+  private browserInstance: any;
+  private browserConfig: BrowserConfig;
 
-  constructor(sleepInterval: number, browserExec: BrowserConfig, queue: Queue<RepTask>) {
+  constructor(sleepInterval: number, browserConfig: BrowserConfig, queue: Queue<RepTask>) {
     this.sleepInterval = sleepInterval;
     this.queue = queue;
-    this.browserExec = browserExec;
+    this.browserConfig = browserConfig;
   }
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
-    this.browser = await puppeteer.launch({
-      executablePath: this.browserExec,
+    this.browserInstance = await puppeteer.launch({
+      executablePath: this.browserConfig,
       slowMo: 500,
       headless: false,
       defaultViewport: null
     });
 
+    // TODO: validate page is loaded properly -> if not use puppeteer to do so
     // this.browser.on('targetchanged', async target => {
     //   const page = await target.page();
     //   if (page && page.url() === url) {
@@ -39,10 +40,10 @@ export default class RepWorker {
     //   }
     // });
 
-    const options = { logLevel: 'info', output: ['html', 'json'], port: (new URL(this.browser.wsEndpoint())).port };
+    const options = { logLevel: 'info', output: ['html', 'json'], port: (new URL(this.browserInstance.wsEndpoint())).port };
     const runnerResult = await lighthouse(url, options);
-    await this.browser.close();
-    this.browser = undefined;
+    await this.browserInstance.close();
+    this.browserInstance = undefined;
 
     return runnerResult;
   }
@@ -68,20 +69,25 @@ export default class RepWorker {
     const timeStamp: string = moment().format('YYYYMMDD-hmmss');
     catRepWorker.info(`Start creating new report for url ${task.url} at ${timeStamp}`);
 
-    const repResult = await this._getLigthouseReport(task.url);
-    const resHtml: string = `resHtml_${task.name}_${timeStamp}.html`;
-    await this._storeReport(repResult.report[0], resHtml, timeStamp, task.output);
-    const resJson: string = `resJson_${task.name}_${timeStamp}.json`;
-    await this._storeReport(repResult.report[1], resJson, timeStamp, task.output);
+    try {
+      const repResult = await this._getLigthouseReport(task.url);
+      const resHtml: string = `resHtml_${task.name}_${timeStamp}.html`;
+      await this._storeReport(repResult.report[0], resHtml, timeStamp, task.output);
+      const resJson: string = `resJson_${task.name}_${timeStamp}.json`;
+      await this._storeReport(repResult.report[1], resJson, timeStamp, task.output);
 
-    catRepWorker.info(`Finished creating report for url: ${task.url}s`);
-    return true;
+      catRepWorker.info(`Finished creating report for url: ${task.url}s`);
+      return true;
+    } catch (e) {
+      catRepWorker.warn('Failed to create report, keep trying...');
+      return false;
+    }
   }
 
   public async kill() {
     this.queue.clear();
-    if (this.browser) {
-      await this.browser.close();
+    if (this.browserInstance) {
+      await this.browserInstance.close();
     }
   }
 

@@ -41,7 +41,7 @@ export default class RepDriver {
         })
       } else {
         catRepDriver.info('Shutdown App done');
-        process.exit(0); 
+        process.exit(0);
       }
     });
 
@@ -58,7 +58,6 @@ export default class RepDriver {
     this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
     catRepDriver.info('Done init RepDriver instance.');
 
-
     return this._registerSignalHandler();
   }
 
@@ -68,6 +67,9 @@ export default class RepDriver {
 
     if (this.worker) {
       this.worker.start();
+    } else {
+      catRepDriver.warn(`Please init RepDriver before executing run()`);
+      return false;
     }
 
     const pages = this.config.getPages();
@@ -80,6 +82,7 @@ export default class RepDriver {
       catRepDriver.info(`New import task created for ${page.url} and interval: ${page.interval}`);
       this.tasks.push(taskInterval);
     }
+    return true;
   }
 }
 

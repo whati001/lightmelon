@@ -1,37 +1,36 @@
 import { catConfig } from './Logger';
 import { fileExists, readJson, resolveRelativeToApp, resolveRelativeToFile } from './../util/FileHandler';
-import {URL} from 'url';
+import { URL } from 'url';
 
 import { PagesConfig, AppConfig, BrowserConfig, PageConfig } from '../types/config';
 
-
 export default class Config {
-  private readonly APP_FILE_NAME: string = 'app.json';
-  private readonly PAGE_FILE_NAME: string = 'pages.json';
+  static readonly APP_FILE_NAME: string = 'app.json';
+  static readonly PAGE_FILE_NAME: string = 'pages.json';
+  static readonly INIT_PAGES_CONFIG: PagesConfig = [];
+  static readonly INIT_APP_CONFIG: AppConfig = { output: [], workerInterval: 0, browserExecutable: '' };
 
   private loadConfig: boolean;
-  private rootDir: string;
-  private pageFile: string;
+  private pagesFile: string;
   private appFile: string;
 
-  private pageConfig: PagesConfig;
+  private pagesConfig: PagesConfig;
   private appConfig: AppConfig;
 
   constructor(root: string = './config/') {
     catConfig.info(`Initiate new instance for configRoot: ${root}`);
 
     this.loadConfig = false;
-    this.rootDir = root;
-    this.pageFile = resolveRelativeToApp(this.rootDir, this.PAGE_FILE_NAME);
-    this.appFile = resolveRelativeToApp(this.rootDir, this.APP_FILE_NAME);
-    this.pageConfig = [];
-    this.appConfig = { output: [], workerInterval: 0, browserExecutable: '' };
+    this.pagesFile = resolveRelativeToApp(root, Config.PAGE_FILE_NAME);
+    this.appFile = resolveRelativeToApp(root, Config.APP_FILE_NAME);
+    this.pagesConfig = Config.INIT_PAGES_CONFIG;
+    this.appConfig = Config.INIT_APP_CONFIG;
 
     catConfig.info(`Done initiating new instance for configRoot: ${root}`);
   }
 
   public getPages(): PagesConfig {
-    return this.pageConfig;
+    return this.pagesConfig;
   }
 
   public getApp(): AppConfig {
@@ -46,22 +45,12 @@ export default class Config {
     return this.appConfig.workerInterval;
   }
 
-  private _configFileExists(): boolean {
-    for (let cPath of [this.pageFile, this.appFile]) {
-      catConfig.debug(`Verify if config path ${cPath} exists`);
-      if (!(fileExists(cPath))) {
-        catConfig.error(`Configuration path ${cPath} does not exists, please double check.`, new Error());
-      }
-    }
-    return true;
-  }
-
   private _validateConfig(): boolean {
     if (!fileExists(this.appConfig.browserExecutable)) {
       catConfig.error('Browser executable not found', new Error('Invalid BrowserEXE'));
       return false;
     }
-    for (let page of this.pageConfig) {
+    for (let page of this.pagesConfig) {
       try {
         new URL(page.url);
       } catch (_) {
@@ -72,31 +61,39 @@ export default class Config {
     return true;
   }
 
+  private _readConfigFile<T>(file: string): T | undefined {
+    if (!fileExists(file)) {
+      catConfig.error(`Failed to find config file: ${file}`, new Error('Config file not found'));
+      return;
+    }
+
+    const config = readJson<T>(file);
+    if (!config) {
+      catConfig.error(`Failed to read configuration file: ${file}`, new Error('Config file read failed'));
+      return;
+    }
+    catConfig.debug(`Config[${file}]: ${JSON.stringify(config)}`);
+    return config;
+  }
+
   public readConfig(): boolean {
     if (this.loadConfig) {
       return true;
     }
 
-    catConfig.info('Start reading config');
-    if (!this._configFileExists()) {
+    const pageRet = this._readConfigFile<PagesConfig>(this.pagesFile);
+    if (!pageRet) {
+      catConfig.error(`Failed to read ${this.pagesFile}`, new Error('Config error'));
       return false;
     }
+    this.pagesConfig = pageRet;
 
-    const pageJson = readJson<PagesConfig>(this.pageFile);
-    if (!pageJson) {
-      catConfig.error('Failed to load pageConfig', new Error());
+    const appRet = this._readConfigFile<AppConfig>(this.appFile);
+    if (!appRet) {
+      catConfig.error(`Failed to read ${this.appFile}`, new Error('Config error'));
       return false;
     }
-    this.pageConfig = pageJson;
-    catConfig.debug(`PageConfig: ${JSON.stringify(this.pageConfig)}`);
-
-    const appJson = readJson<AppConfig>(this.appFile);
-    if (!appJson) {
-      catConfig.error('Failed to load outConfig', new Error());
-      return false;
-    }
-    this.appConfig = appJson;
-    catConfig.debug(`AppConfig: ${JSON.stringify(this.appConfig)}`);
+    this.appConfig = appRet;
 
     return this._validateConfig();
   }
