@@ -1,7 +1,9 @@
 import { catConfig } from './Logger';
 import { fileExists, readJson, resolveRelativeToApp, resolveRelativeToFile } from './../util/FileHandler';
+import {URL} from 'url';
 
 import { PagesConfig, AppConfig, BrowserConfig, PageConfig } from '../types/config';
+
 
 export default class Config {
   private readonly APP_FILE_NAME: string = 'app.json';
@@ -58,6 +60,14 @@ export default class Config {
     if (!fileExists(this.appConfig.browserExecutable)) {
       catConfig.error('Browser executable not found', new Error('Invalid BrowserEXE'));
       return false;
+    }
+    for (let page of this.pageConfig) {
+      try {
+        new URL(page.url);
+      } catch (_) {
+        catConfig.error(`Invalid url found for page: ${page.name}, please check ${page.url}`, new Error('Invalid PageUrl'));
+        return false;
+      }
     }
     return true;
   }

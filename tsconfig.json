@@ -6,5 +6,9 @@
     "outDir": "./build",
     "esModuleInterop": true,
     "strict": true
-  }
+  },
+  "include": [
+    "src",
+    "node_modules/@types/puppeteer-core/index.d.ts"
+  ]
 }

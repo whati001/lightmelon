@@ -5,9 +5,9 @@ import Queue from '../util/Queue';
 import { RepTask } from '../types/queue';
 import { sleep } from '../util/Utils';
 import { BrowserConfig, ReportOutputs } from '../types/config';
+import puppeteer from 'puppeteer-core';
+import { URL } from 'url';
 
-// @ts-ignore
-const chromeLauncher = require('chrome-launcher');
 // @ts-ignore
 const lighthouse = require('lighthouse');
 
@@ -25,14 +25,23 @@ export default class RepWorker {
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
-    this.browser = await chromeLauncher.launch({
-      browserExec: this.browserExec,
-      chromeFlags: ['--headfull', '--disable-gpu']
+    this.browser = await puppeteer.launch({
+      executablePath: this.browserExec,
+      slowMo: 500,
+      headless: false,
+      defaultViewport: null
     });
 
-    const options = { logLevel: 'info', output: ['html', 'json'], port: this.browser.port };
+    // this.browser.on('targetchanged', async target => {
+    //   const page = await target.page();
+    //   if (page && page.url() === url) {
+    //     await page.addStyleTag({content: '* {color: red}'});
+    //   }
+    // });
+
+    const options = { logLevel: 'info', output: ['html', 'json'], port: (new URL(this.browser.wsEndpoint())).port };
     const runnerResult = await lighthouse(url, options);
-    await this.browser.kill();
+    await this.browser.close();
     this.browser = undefined;
 
     return runnerResult;
@@ -72,7 +81,7 @@ export default class RepWorker {
   public async kill() {
     this.queue.clear();
     if (this.browser) {
-      await this.browser.kill();
+      await this.browser.close();
     }
   }
 
