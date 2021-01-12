@@ -15,11 +15,13 @@ export default class RepWorker {
   private queue: Queue<RepTask>;
   private sleepInterval: number;
   private browserInstance: any;
+  private browserUserDir: string;
   private browserConfig: BrowserConfig;
 
-  constructor(sleepInterval: number, browserConfig: BrowserConfig, queue: Queue<RepTask>) {
+  constructor(sleepInterval: number, browserConfig: BrowserConfig, browserUserDir: string, queue: Queue<RepTask>) {
     this.sleepInterval = sleepInterval;
     this.queue = queue;
+    this.browserUserDir = browserUserDir;
     this.browserConfig = browserConfig;
   }
 
@@ -27,9 +29,9 @@ export default class RepWorker {
   private async _getLigthouseReport(url: string): any {
     this.browserInstance = await puppeteer.launch({
       executablePath: this.browserConfig,
-      slowMo: 500,
       headless: false,
-      defaultViewport: null
+      defaultViewport: null,
+      userDataDir: this.browserUserDir
     });
 
     // TODO: validate page is loaded properly -> if not use puppeteer to do so

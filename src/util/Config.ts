@@ -8,7 +8,7 @@ export default class Config {
   static readonly APP_FILE_NAME: string = 'app.json';
   static readonly PAGE_FILE_NAME: string = 'pages.json';
   static readonly INIT_PAGES_CONFIG: PagesConfig = [];
-  static readonly INIT_APP_CONFIG: AppConfig = { output: [], workerInterval: 0, browserExecutable: '' };
+  static readonly INIT_APP_CONFIG: AppConfig = { output: [], workerInterval: 0, browserExecutable: '', browserUserDir: '' };
 
   private loadConfig: boolean;
   private pagesFile: string;
@@ -37,8 +37,12 @@ export default class Config {
     return this.appConfig;
   }
 
-  public getBrowser(): BrowserConfig {
+  public getBrowserExecPath(): BrowserConfig {
     return this.appConfig.browserExecutable;
+  }
+
+  public getBrowserUserDir(): BrowserConfig {
+    return this.appConfig.browserUserDir;
   }
 
   public getWorkerSleepInterval(): number {

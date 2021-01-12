@@ -35,5 +35,6 @@ export type BrowserConfig = string;
 export type AppConfig = {
   output: ReportOutputs,
   workerInterval: number,
-  browserExecutable: BrowserConfig
+  browserExecutable: BrowserConfig,
+  browserUserDir: string
 }

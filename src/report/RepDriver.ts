@@ -55,7 +55,7 @@ export default class RepDriver {
       return false;
     }
 
-    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
+    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowserExecPath(), this.config.getBrowserUserDir(), this.queue);
     catRepDriver.info('Done init RepDriver instance.');
 
     return this._registerSignalHandler();
