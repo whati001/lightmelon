@@ -6,5 +6,5 @@
     }
   ],
   "workerInterval": 1000,
-  "browserExecutable": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
+  "browserExecutable": "/usr/bin/chromium"
 }

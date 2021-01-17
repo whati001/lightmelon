@@ -35,10 +35,10 @@ export default class RepDriver {
       catRepDriver.info('Stop RepWorker');
       if (this.worker) {
         this.worker.kill().then(res => {
-          console.log('Killed RepWorker')
+          console.log('Killed RepWorker');
           catRepDriver.info('Shutdown App done');
           process.exit(0);
-        })
+        });
       } else {
         catRepDriver.info('Shutdown App done');
         process.exit(0);
@@ -68,7 +68,7 @@ export default class RepDriver {
     if (this.worker) {
       this.worker.start();
     } else {
-      catRepDriver.warn(`Please init RepDriver before executing run()`);
+      catRepDriver.warn('Please init RepDriver before executing run()');
       return false;
     }
 

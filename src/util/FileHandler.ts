@@ -15,13 +15,13 @@ export const resolveRelativeToApp = (...paths: string[]): string => {
 
 export const resolveFullPath = (file: string): string => {
   return path.resolve(file);
-}
+};
 
 export const createFolder = (path: string) => {
   if (!fs.existsSync(path)) {
     fs.mkdirSync(path);
   }
-}
+};
 
 export const writeFile = (path: string, payload: string) => {
   return fs.writeFileSync(path, payload);
