@@ -6,10 +6,10 @@
   "scripts": {
     "start": "ts-node ./src/app.ts",
     "watch": "nodemon ./src/app.ts",
-    "build": "yarn lint && yarn tsc --project ./",
+    "build": "yarn tsc --project ./",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --fix",
-    "clean": "rimraf ./build/",
-    "pkg": "pkg . -t node14-linux-x64"
+    "clean": "rimraf ./build/ ./result/",
+    "pkg": "pkg . -t node14-win-x64"
   },
   "repository": {
     "type": "git",

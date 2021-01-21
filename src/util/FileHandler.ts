@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 export const fileExists = (path: string): boolean => {
@@ -12,6 +13,10 @@ export const resolveRelativeToFile = (file: string): string => {
 export const resolveRelativeToApp = (...paths: string[]): string => {
   return path.join(process.cwd(), ...paths);
 };
+
+export const resolveRelative = (...paths: string[]): string => {
+  return path.join(...paths);
+}
 
 export const resolveFullPath = (file: string): string => {
   return path.resolve(file);

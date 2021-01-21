@@ -1,4 +1,4 @@
-import { ReportOutputs } from './config';
+import { ReportOutputs } from './appConfig';
 
 export interface IQueue<T> {
   enqueue(item: T): void;
@@ -6,8 +6,9 @@ export interface IQueue<T> {
   size(): number;
 }
 
-export interface RepTask {
+export type ReportTask = {
   name: string,
-  url: string;
-  output: ReportOutputs;
+  url: string,
+  auth?: string,
+  outputs: ReportOutputs
 }

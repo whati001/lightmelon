@@ -1,20 +1,21 @@
-import { catRepDriver } from '../util/Logger';
 import Config from '../util/Config';
 import RepWorker from './RepWorker';
 import Queue from '../util/Queue';
-import { RepTask } from '../types/queue';
-import { PageConfig, ReportOutputs } from '../types/config';
+import { ReportTask } from '../types/queue';
+import { PageConfig } from '../types/pageConfig';
+import { catRepDriver } from '../util/Logger';
+import { ReportOutputs } from '../types/appConfig';
 
 export default class RepDriver {
   private config: Config;
   private tasks: number[];
-  private queue: Queue<RepTask>;
+  private queue: Queue<ReportTask>;
   private worker: RepWorker | undefined;
 
-  constructor(cRoot: string) {
-    this.config = new Config(cRoot);
+  constructor(configPath: string) {
+    this.config = new Config(configPath);
     this.tasks = [];
-    this.queue = new Queue<RepTask>(50);
+    this.queue = new Queue<ReportTask>(50);
     this.worker = undefined;
     catRepDriver.info('Created new RepDriver instance, please init() before use.');
   }
@@ -55,7 +56,7 @@ export default class RepDriver {
       return false;
     }
 
-    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowserExecPath(), this.config.getBrowserUserDir(), this.queue);
+    this.worker = new RepWorker(this.config.getWorkerSleepInterval(), this.config.getBrowser(), this.queue);
     catRepDriver.info('Done init RepDriver instance.');
 
     return this._registerSignalHandler();
@@ -72,13 +73,13 @@ export default class RepDriver {
       return false;
     }
 
-    const pages = this.config.getPages();
-    const outputs = this.config.getApp().output;
+    const pages = this.config.getAllPages();
+    const outputs = this.config.getOutputs();
     for (let page of pages) {
-      const taskInterval = setInterval((queue: Queue<RepTask>, pageConfig: PageConfig, outputs: ReportOutputs) => {
-        const task: RepTask = { name: pageConfig.name, url: pageConfig.url, output: outputs };
+      const taskInterval = setInterval((queue: Queue<ReportTask>, pageConfig: PageConfig, outputs: ReportOutputs) => {
+        const task: ReportTask = { name: pageConfig.name, url: pageConfig.url, auth: pageConfig.auth, outputs: outputs };
         queue.enqueue(task);
-      }, page.interval, this.queue, page, outputs);
+      }, page.interval * 60 * 1000, this.queue, page, outputs);
       catRepDriver.info(`New import task created for ${page.url} and interval: ${page.interval}`);
       this.tasks.push(taskInterval);
     }

@@ -2,37 +2,32 @@ import { catRepWorker } from '../util/Logger';
 import moment from 'moment';
 import { createFolder, writeRelativeToApp } from '../util/FileHandler';
 import Queue from '../util/Queue';
-import { RepTask } from '../types/queue';
+import { ReportTask } from '../types/queue';
 import { sleep } from '../util/Utils';
-import { BrowserConfig, ReportOutputs } from '../types/config';
 import puppeteer from 'puppeteer-core';
 import { URL } from 'url';
+import { BrowserConfig, ReportOutputs, ReportOutput } from '../types/appConfig';
+import getAuth from './../auth';
+import { Auth } from '../types/auth';
 
 // @ts-ignore
 const lighthouse = require('lighthouse');
 
 export default class RepWorker {
-  private queue: Queue<RepTask>;
+  private queue: Queue<ReportTask>;
   private sleepInterval: number;
-  private browserInstance: any;
-  private browserUserDir: string;
+  private browserInstance: puppeteer.Browser | undefined;
   private browserConfig: BrowserConfig;
 
-  constructor(sleepInterval: number, browserConfig: BrowserConfig, browserUserDir: string, queue: Queue<RepTask>) {
+  constructor(sleepInterval: number, browserConfig: BrowserConfig, queue: Queue<ReportTask>) {
     this.sleepInterval = sleepInterval;
     this.queue = queue;
-    this.browserUserDir = browserUserDir;
+    this.browserInstance = undefined;
     this.browserConfig = browserConfig;
   }
 
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
-    this.browserInstance = await puppeteer.launch({
-      executablePath: this.browserConfig,
-      headless: false,
-      defaultViewport: null,
-      userDataDir: this.browserUserDir
-    });
 
     // TODO: validate page is loaded properly -> if not use puppeteer to do so
     // this.browser.on('targetchanged', async target => {
@@ -42,12 +37,17 @@ export default class RepWorker {
     //   }
     // });
 
-    const options = { logLevel: 'info', output: ['html', 'json'], port: (new URL(this.browserInstance.wsEndpoint())).port };
-    const runnerResult = await lighthouse(url, options);
-    await this.browserInstance.close();
-    this.browserInstance = undefined;
+    if (this.browserInstance) {
+      const options = { logLevel: 'info', output: ['html', 'json'], port: (new URL(this.browserInstance.wsEndpoint())).port };
+      const runnerResult = await lighthouse(url, options);
+      await this.browserInstance.close();
+      this.browserInstance = undefined;
 
-    return runnerResult;
+      return runnerResult;
+    } else {
+      catRepWorker.warn('No active browser instance found, skip current report creation');
+      return undefined;
+    }
   }
 
   private async _storeReport(report: string, name: string, timeStamp: string, outputs: ReportOutputs) {
@@ -67,16 +67,73 @@ export default class RepWorker {
     }
   }
 
-  public async createReport(task: RepTask): Promise<boolean> {
+  private _getBrowserConfig(): puppeteer.LaunchOptions {
+    const options: puppeteer.LaunchOptions = {
+      headless: this.browserConfig.headless,
+      executablePath: this.browserConfig.executable
+    };
+
+    return options;
+  }
+
+  private async _startBrowser(): Promise<boolean> {
+    try {
+      this.browserInstance = await puppeteer.launch(this._getBrowserConfig());
+      return true;
+    } catch (e) {
+      catRepWorker.error(`Failed to start browser instance, skip RepTask report building`, new Error('Browser not started properly'));
+      return false;
+    }
+  }
+
+  private async _closeBrowser() {
+    if (this.browserInstance) {
+      await this.browserInstance.close();
+    }
+  }
+
+  public async _doAuthentication(authname: string): Promise<boolean> {
+    catRepWorker.info(`Page needs some authentication, start authentication for ${authname}`);
+    if (this.browserInstance) {
+      const auth: Auth = getAuth(authname);
+      if (await auth.isLoggedIn(this.browserInstance)) {
+        catRepWorker.info(`User is still logged in, skip authentication process`);
+        return true;
+      }
+      catRepWorker.info('No active user session found, start new login process');
+      if (await auth.login(this.browserInstance, this.browserConfig.auth)) {
+        catRepWorker.info(`User logged in, authentication was successfully`);
+        return true;
+      }
+      catRepWorker.error(`Failed to authenticate user against page, skip RepTask report building`, new Error('Failed to authenticate user against page'));
+      return false;
+    }
+    catRepWorker.error(`Browser instance crashed somehow before authentication took place`, new Error('Browser closed unexpected'));
+    return false;
+  }
+
+  public async createReport(task: ReportTask): Promise<boolean> {
     const timeStamp: string = moment().format('YYYYMMDD-hmmss');
     catRepWorker.info(`Start creating new report for url ${task.url} at ${timeStamp}`);
 
+    await this._startBrowser();
+
+    if (task.auth) {
+      if (!await this._doAuthentication(task.auth)) {
+        await this._closeBrowser();
+        return false;
+      }
+    }
+
     try {
       const repResult = await this._getLigthouseReport(task.url);
+      if (!repResult) {
+        catRepWorker.warn('Skip result storing, something went wrong with report creation');
+      }
       const resHtml: string = `resHtml_${task.name}_${timeStamp}.html`;
-      await this._storeReport(repResult.report[0], resHtml, timeStamp, task.output);
+      await this._storeReport(repResult.report[0], resHtml, timeStamp, task.outputs);
       const resJson: string = `resJson_${task.name}_${timeStamp}.json`;
-      await this._storeReport(repResult.report[1], resJson, timeStamp, task.output);
+      await this._storeReport(repResult.report[1], resJson, timeStamp, task.outputs);
 
       catRepWorker.info(`Finished creating report for url: ${task.url}s`);
       return true;
@@ -88,9 +145,7 @@ export default class RepWorker {
 
   public async kill() {
     this.queue.clear();
-    if (this.browserInstance) {
-      await this.browserInstance.close();
-    }
+    this._closeBrowser();
   }
 
   public async start() {
