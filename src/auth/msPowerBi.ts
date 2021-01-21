@@ -20,6 +20,10 @@ export default class MsPowerBi implements Auth {
         await page.click('input[type=submit]');
         await page.waitForTimeout(WAIT_TIME);
 
+        if(await this.isLoggedIn(browser)) {
+          return true;
+        }
+
         await page.authenticate({ username: auth.email, password: auth.pwd });
         await page.goto(LOGIN_URL);
         await page.waitForTimeout(WAIT_TIME);
@@ -41,6 +45,7 @@ export default class MsPowerBi implements Auth {
       await page.goto(VALIDATE_URL);
       await page.waitForTimeout(WAIT_TIME);
       const elem = await page.$('.powerBILogoText');
+      await page.close();
       return ((elem) ? true : false);
 
     } catch (e) {
