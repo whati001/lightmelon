@@ -2,11 +2,11 @@
   {
     "name": "google",
     "url": "https://google.com",
-    "interval": 10000
+    "interval": 2
   },
   {
     "name": "rehkaFish",
     "url": "https://fisch.rehka.dev",
-    "interval": 20000
+    "interval": 1
   }
 ]

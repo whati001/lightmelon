@@ -5,6 +5,14 @@
       "folder": "./result/"
     }
   ],
-  "workerInterval": 1000,
-  "browserExecutable": "/usr/bin/chromium"
+  "browser": {
+    "type": "chromium",
+    "executable": "./../chromium/chrome.exe",
+    "headless": false,
+    "auth": {
+      "email": "userNameHere",
+      "pwd": "pwdHere"
+    }
+  },
+  "workerInterval": 1000
 }
