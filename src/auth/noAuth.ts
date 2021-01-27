@@ -11,6 +11,6 @@ export default class NoAuth implements Auth {
     return true;
   }
   public async logout(browser: puppeteer.Browser): Promise<boolean> {
-    return true
+    return true;
   }
 }

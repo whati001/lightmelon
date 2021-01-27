@@ -3,7 +3,7 @@ import { UserAuth } from './../types/appConfig';
 import puppeteer from 'puppeteer-core';
 import { catAuth } from './../util/Logger';
 
-const LOGIN_URL = 'https://login.microsoftonline.com/'
+const LOGIN_URL = 'https://login.microsoftonline.com/';
 const VALIDATE_URL = 'https://app.powerbi.com/home';
 const WAIT_TIME = 10 * 1000;
 
@@ -55,6 +55,6 @@ export default class MsPowerBi implements Auth {
   }
 
   public async logout(browser: puppeteer.Browser): Promise<boolean> {
-    return true
+    return true;
   }
 }

@@ -14,4 +14,4 @@ export default (name: string): Auth => {
     default:
       return new NoAuth();
   }
-}
+};

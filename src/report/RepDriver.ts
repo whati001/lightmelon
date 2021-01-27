@@ -5,13 +5,22 @@ import { ReportTask } from '../types/queue';
 import { PageConfig } from '../types/pageConfig';
 import { catRepDriver } from '../util/Logger';
 import { ReportOutputs } from '../types/appConfig';
+import { getMsFromMinute } from '../util/Utils';
 
+/**
+ * RepDriver class
+ * Holds entire configuration and worker information
+ */
 export default class RepDriver {
   private config: Config;
   private tasks: number[];
   private queue: Queue<ReportTask>;
   private worker: RepWorker | undefined;
 
+  /**
+   * RepDriver ctor
+   * @param configPath configuration directory path relative to app home
+   */
   constructor(configPath: string) {
     this.config = new Config(configPath);
     this.tasks = [];
@@ -20,6 +29,9 @@ export default class RepDriver {
     catRepDriver.info('Created new RepDriver instance, please init() before use.');
   }
 
+  /**
+   * Register all needed signal handlers
+   */
   private _registerSignalHandler() {
     catRepDriver.info('Start register process signal handler');
     process.on('SIGINT', () => {
@@ -50,6 +62,9 @@ export default class RepDriver {
     return true;
   }
 
+  /**
+   * Init RepDriver class instance
+   */
   public init(): boolean {
     catRepDriver.info('Start init RepDriver instance.');
     if (!this.config.readConfig()) {
@@ -62,24 +77,35 @@ export default class RepDriver {
     return this._registerSignalHandler();
   }
 
+  /**
+   * Run RepDriver instance
+   */
   public run() {
     const startDateTime: Date = new Date();
     catRepDriver.info(`Started app at ${startDateTime}`);
 
-    if (this.worker) {
-      this.worker.start();
-    } else {
+    if (undefined === this.worker) {
       catRepDriver.warn('Please init RepDriver before executing run()');
       return false;
     }
 
+    this.worker.start();
     const pages = this.config.getAllPages();
     const outputs = this.config.getOutputs();
     for (let page of pages) {
-      const taskInterval = setInterval((queue: Queue<ReportTask>, pageConfig: PageConfig, outputs: ReportOutputs) => {
-        const task: ReportTask = { name: pageConfig.name, url: pageConfig.url, auth: pageConfig.auth, outputs: outputs };
+
+      const interval = getMsFromMinute(page.interval);
+      const pageHandler: TimerHandler = (queue: Queue<ReportTask>, pageConfig: PageConfig, outputs: ReportOutputs) => {
+        const task: ReportTask = {
+          name: pageConfig.name,
+          url: pageConfig.url,
+          auth: pageConfig.auth,
+          outputs: outputs
+        };
         queue.enqueue(task);
-      }, page.interval * 60 * 1000, this.queue, page, outputs);
+      };
+      const taskInterval = setInterval(pageHandler, interval, this.queue, page, outputs);
+
       catRepDriver.info(`New import task created for ${page.url} and interval: ${page.interval}`);
       this.tasks.push(taskInterval);
     }

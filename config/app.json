@@ -7,7 +7,7 @@
   ],
   "browser": {
     "type": "chromium",
-    "executable": "./../chromium/chrome.exe",
+    "executable": "/usr/bin/chromium",
     "headless": false,
     "auth": {
       "email": "userNameHere",
