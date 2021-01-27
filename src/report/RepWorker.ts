@@ -60,6 +60,7 @@ export default class RepWorker {
       return true;
     } catch (e) {
       catRepWorker.warn('Failed to start browser instance, skip RepTask report building');
+      console.debug(e);
       return false;
     }
   }
@@ -102,9 +103,11 @@ export default class RepWorker {
 
           const htmlFile = `${dstDir}/resHtml_${name}_${timeStamp}.html`;
           writeRelativeToApp(htmlFile, repResult.report[0]);
+          catRepWorker.info(`Stored HTML report as file to ${htmlFile}`);
 
-          const jsonFile = `${dstDir} /resJson_${name}_${timeStamp}.json`;
+          const jsonFile = `${dstDir}/resJson_${name}_${timeStamp}.json`;
           writeRelativeToApp(jsonFile, repResult.report[1]);
+          catRepWorker.info(`Stored JSON report as file to ${jsonFile}`);
           break;
         }
         default:
@@ -136,6 +139,10 @@ export default class RepWorker {
     }
   }
 
+  /**
+   * Authenticate before creating the report
+   * @param authname authenticate name to use for this report task
+   */
   public async _doAuthentication(authname: string): Promise<boolean> {
     catRepWorker.info(`Page needs some authentication, start authentication for ${authname}`);
 
@@ -191,6 +198,7 @@ export default class RepWorker {
       return true;
     } catch (e) {
       catRepWorker.warn('Failed to create report, keep trying...');
+      console.debug(e);
       return false;
     }
   }

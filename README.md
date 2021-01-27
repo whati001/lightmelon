@@ -1,8 +1,11 @@
 
 # Lightmelon
+
 Simple task runner to validate webpage performance continuesly with [Google Chrome Lighthouse](https://developers.google.com/web/tools/lighthouse/).
 
 Please consider that this project is still in beta. Hence, it may break by running it as a long time job.
+
+To support authentication against pages, we launch and support browser driving via [puppeteer-core](https://www.npmjs.com/package/puppeteer-core)
 
 ## Getting Started
 To get a local copy up and running follow these simple steps.
@@ -29,6 +32,7 @@ The app uses two different configuration files. `app.json` includes everything r
 
 #### app.json
 !!! in beta, only file output is supported and without headless. 
+In addition, need to move out the `auth` property from app.json. 
 Please just update the profilePath and userProfile.
 ```json
 {
@@ -38,28 +42,35 @@ Please just update the profilePath and userProfile.
       "folder": "./result/"
     }
   ],
-  "workerInterval": 1000,
   "browser": {
+    "type": "chromium",
+    "executable": "/usr/bin/chromium",
     "headless": false,
-    "profilePath": "C:\\Users\\akarner\\AppData\\Local\\Google\\Chrome\\User Data",
-    "userProfile": "Default"
-  }
+    "auth": {
+      "email": "andreas.karner[at]student.tugraz.at",
+      "pwd": "pwdHere"
+    }
+  },
+  "workerInterval": 1000
 }
 ```
 
 #### pages.json
 Please define some pages to validate. Please consider that if you need authentication, that you logged in first.
+Login logic is set via `auth` property, whose needs to match with one in the `src/auth/index.ts` switch statement.
+!!Find better solution than this one.
 ```json
 [
   {
-    "name": "fischRehKa",
-    "url": "https://fisch.rehka.dev",
-    "interval": 20000
+    "name": "google",
+    "url": "https://google.com",
+    "interval": 2
   },
   {
-    "name": "powerbi",
-    "url": "https://app.powerbi.com",
-    "interval": 9000
+    "name": "rehkaFish",
+    "url": "https://fisch.rehka.dev",
+    "interval": 1,
+    "auth": "someAuth"
   }
 ]
 
@@ -88,6 +99,8 @@ yarn run start
 ### Build production
 Will compile the typescript source into js code and store into `./build/`.
 ```sh
+yarn run clean
+yarn run lint
 yarn run build
 ```
 
@@ -95,6 +108,13 @@ yarn run build
 Will start `nodemon` and watch for file changes
 ```sh
 yarn run watch
+```
+
+### Pkg single executable
+Create a single executable for releasing a version.
+Please change the release os as needed in `package.json`.
+```sh
+yarn run pkg
 ```
 
 ## Contributing
@@ -107,11 +127,17 @@ Contributions are what make the open source community such an amazing place to b
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+Or just buy me a beer :)
+<div>
+<a href="https://www.buymeacoffee.com/whati001" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+</div>
+
+
 ## Security
 This project was added to the analyse tool [LGTM](https://lgtm.com/projects/g/whati001/lightmelon/). Please check the result after changing something.
 
 ## License
-Distributed under the MAGNA License.
+Distributed under the GNU License. See LICENSE for more information.
 
 ## Contact
 * [whati001](https://github.com/whati001)

@@ -8,7 +8,7 @@
   "browser": {
     "type": "chromium",
     "executable": "/usr/bin/chromium",
-    "headless": false,
+    "headless": true,
     "auth": {
       "email": "userNameHere",
       "pwd": "pwdHere"
