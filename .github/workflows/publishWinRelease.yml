@@ -1,0 +1,42 @@
+# This is a basic workflow to help you get started with Actions
+
+name: WinRelease
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push to master, merge triggers commit + push to main
+  push:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Install project dependencies
+        run: yarn
+
+      - name: Lint project
+        run: yarn lint
+      
+      - name: Build project
+        run: yarn build
+      
+      - name: Package project
+        run: yarn pkg
+      
+      - name: Publish Artifact
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: Lightmelon-WinRelease
+          path: lightmelon.exe
