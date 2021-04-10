@@ -1,4 +1,3 @@
-import * as appConfig from './appConfig';
-import * as pageConfig from './pageConfig';
+import * as config from "./config";
 
-export default { appConfig, pageConfig };
+export default { config };
