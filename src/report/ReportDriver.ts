@@ -123,7 +123,7 @@ export default class ReportDriver {
    */
   private _registerJobs() {
     for (let page of this.config.pages) {
-      const interval = getMsFromMinute(page.interval);
+      const interval = page.interval; //getMsFromMinute(page.interval);
 
       const pageTask: ReportTask = {
         page: page,

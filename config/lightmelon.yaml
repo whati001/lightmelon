@@ -16,5 +16,5 @@ auth:
 pages:
   - name: "google"
     url: "https://google.com"
-    interval: 1
+    interval: 10000
     auth: "winUser"

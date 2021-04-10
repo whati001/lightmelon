@@ -11,6 +11,8 @@ import { Auth } from "../types/auth";
 import {
   AppOutputConfig,
   BrowserConfig,
+  FileOutputConfig,
+  HttpOutputConfig,
   PageAuthConfig,
 } from "../types/config";
 
@@ -29,11 +31,12 @@ export default class ReportWorker {
   private launchConfig: puppeteer.LaunchOptions;
 
   /**
-   * ReportWorker ctor
-   * @param sleepInterval interval in ms if no task is equeued
-   * @param browserConfig browser config to use for creating report
-   * @param queue queue to fetch tasks from
-   */
+  * RepWorker constructor
+  * @param workerId unique id for this worker
+  * @param sleepInterval sleep before try to dequeue new task
+  * @param launchConfig for puppeteer browser
+  * @param queue to get tasks from
+  */
   constructor(
     workerId: number,
     sleepInterval: number,
@@ -81,66 +84,76 @@ export default class ReportWorker {
     this._closeBrowser();
   }
 
-  // /**
-  //  * Store report result to all passed outputs
-  //  * @param repResult report object to store
-  //  * @param name name to use for storing the result
-  //  * @param outputs outputs to store report to
-  //  */
-  // private async _storeReport(
-  //   repResult: any,
-  //   name: string,
-  //   outputs: AppOutputConfig,
-  // ) {
-  //   const timeStamp: string = moment().format("YYYYMMDD-hmmss");
+  /**
+   * Store report result to all passed outputs
+   * @param repResult report object to store
+   * @param name name to use for storing the result
+   * @param outputs outputs to store report to
+   */
+  private async _storeReport(
+    repResult: string,
+    name: string,
+    outputs: AppOutputConfig,
+  ) {
+    for (let output of outputs) {
+      switch (output.type) {
+        case "file": {
+          const fileOutput = output as FileOutputConfig;
+          catReportWorker.info(
+            `Start to store report as file with name ${name}`,
+          );
+          createFolder(fileOutput.folder);
+          writeRelativeToApp(`/${fileOutput.folder}/${name}`, repResult);
+          catReportWorker.info(
+            `Finished to store report as file with name ${name}`,
+          );
+          break;
+        }
+        case "http": {
+          const httpOutput = output as HttpOutputConfig;
+          catReportWorker.info(
+            `Start to store report as http with name ${name}`,
+          );
+          // TODO: add some fetch
+          catReportWorker.info(
+            `Finished to store report as http with name ${name}`,
+          );
+          break;
+        }
+        default: {
+          catReportWorker.warn(
+            `Unsupported output type ${output.type} used, please check documentation`,
+          );
+          break;
+        }
+      }
+    }
+  }
 
-  //   // for (let output of outputs) {
-  //   //   catReportWorker.info(`Ouput report to ${JSON.stringify(output)}`);
+  /**
+   * Create new report with ligthouse framework
+   * @param url to create report for
+   */
+  // @ts-ignore
+  private async _getLigthouseReport(url: string): any {
+    if (this.browser) {
+      const lighthouseConfig = {
+        logLevel: "info",
+        output: ["html", "json"],
+        port: (new URL(this.browser.wsEndpoint())).port,
+      };
+      const runnerResult = await lighthouse(url, lighthouseConfig);
+      await this.browser.close();
+      this.browser = undefined;
 
-  //   //   switch (output.type) {
-  //   //     case "file": {
-  //   //       const dstDir = output.folder;
-  //   //       createFolder(dstDir);
-
-  //   //       const htmlFile = `${dstDir}/resHtml_${name}_${timeStamp}.html`;
-  //   //       writeRelativeToApp(htmlFile, repResult.report[0]);
-  //   //       catReportWorker.info(`Stored HTML report as file to ${htmlFile}`);
-
-  //   //       const jsonFile = `${dstDir}/resJson_${name}_${timeStamp}.json`;
-  //   //       writeRelativeToApp(jsonFile, repResult.report[1]);
-  //   //       catReportWorker.info(`Stored JSON report as file to ${jsonFile}`);
-  //   //       break;
-  //   //     }
-  //   //     default:
-  //   //       break;
-  //   //   }
-  //   // }
-  // }
-
-  // /**
-  //  * Create new report with ligthouse framework
-  //  * @param url to create report for
-  //  */
-  // // @ts-ignore
-  // private async _getLigthouseReport(url: string): any {
-  //   if (this.browser) {
-  //     const lighthouseConfig = {
-  //       logLevel: "info",
-  //       output: ["html", "json"],
-  //       port: (new URL(this.browser.wsEndpoint())).port,
-  //     };
-  //     const runnerResult = await lighthouse(url, lighthouseConfig);
-  //     await this.browser.close();
-  //     this.browser = undefined;
-
-  //     return runnerResult;
-  //   } else {
-  //     catReportWorker.warn(
-  //       "No active browser instance found, skip current report creation",
-  //     );
-  //     return undefined;
-  //   }
-  // }
+      return runnerResult;
+    } else {
+      catReportWorker.warn(
+        "No active browser instance found, skip current report creation",
+      );
+      return undefined;
+    }
+  }
 
   // /**
   //  * Authenticate before creating the report
@@ -180,41 +193,53 @@ export default class ReportWorker {
   //   return false;
   // }
 
-  // /**
-  //  * Create new Ligthouse report
-  //  * @param task task to create report for
-  //  */
-  // public async createReport(task: ReportTask): Promise<boolean> {
-  //   catReportWorker.info(`Start creating new report for url ${task.url}`);
+  /**
+   * Create new Ligthouse report
+   * @param task task to create report for
+   */
+  public async createReport(task: ReportTask): Promise<boolean> {
+    catReportWorker.info(`Start creating new report for url ${task.page.url}`);
 
-  //   const retStartBrowser = await this._startBrowser();
-  //   if (!retStartBrowser) {
-  //     return false;
-  //   }
+    const retStartBrowser = await this._startBrowser();
+    if (!retStartBrowser) {
+      return false;
+    }
 
-  //   if (task.auth) {
-  //     const retDoAuth = await this._doAuthentication(task.auth);
-  //     if (!retDoAuth) {
-  //       await this._closeBrowser();
-  //       return false;
-  //     }
-  //   }
+    // if (task.auth) {
+    //   const retDoAuth = await this._doAuthentication(task.auth);
+    //   if (!retDoAuth) {
+    //     await this._closeBrowser();
+    //     return false;
+    //   }
+    // }
 
-  //   try {
-  //     const repResult = await this._getLigthouseReport(task.url);
-  //     if (!repResult) {
-  //       catReportWorker.warn("Failed to create report, skip storing results");
-  //     }
+    try {
+      const repResult = await this._getLigthouseReport(task.page.url);
+      if (!repResult) {
+        catReportWorker.warn("Failed to create report, skip storing results");
+      }
+      catReportWorker.info(
+        `Created report for url ${task.page.url} successfully`,
+      );
 
-  //     await this._storeReport(repResult, task.name, task.outputs);
-  //     catReportWorker.info(`Finished creating report for url: ${task.url}s`);
-  //     return true;
-  //   } catch (e) {
-  //     catReportWorker.warn("Failed to create report, keep trying...");
-  //     console.debug(e);
-  //     return false;
-  //   }
-  // }
+      catReportWorker.info("Start storing reports");
+      const timeStamp: string = moment().format("YYYYMMDD-hmmss");
+
+      const resHtmlName = `resHtml_${task.page.name}_${timeStamp}.html`;
+      await this._storeReport(repResult.report[0], resHtmlName, task.outputs);
+
+      const resJsonName = `resJson_${task.page.name}_${timeStamp}.html`;
+      await this._storeReport(repResult.report[1], resJsonName, task.outputs);
+
+      catReportWorker.info("Finished storing report");
+
+      return true;
+    } catch (e) {
+      catReportWorker.warn("Failed to create report, keep trying...");
+      console.debug(e);
+      return false;
+    }
+  }
 
   /**
    * Start ReportWorker and keep working until kill receives
@@ -227,7 +252,7 @@ export default class ReportWorker {
         const task = this.queue.dequeue();
         if (task) {
           catReportWorker.info(`Process some task on Worker ${this.workerId}`);
-          // await this.createReport(task);
+          await this.createReport(task);
         }
       }
     }
