@@ -1,7 +1,8 @@
 import { catApp } from "./util/Logger";
-// import RepDriver from "./report/RepDriver";
+import ReportDriver from "./report/ReportDriver";
 import { parserConfig } from "./util/ConfigParser";
 import { resolveRelativeToApp } from "./util/FileHandler";
+import { exit } from "process";
 
 const CONFIG_FILE = resolveRelativeToApp("config", "lightmelon.yaml");
 
@@ -11,14 +12,19 @@ const CONFIG_FILE = resolveRelativeToApp("config", "lightmelon.yaml");
 (() => {
   catApp.info("Starting lightmelon application in progress.");
   const config = parserConfig(CONFIG_FILE);
-  // const repMe = new RepDriver(CONFIG_DIR);
-  // const retDriver = repMe.init();
-  // if (!retDriver) {
-  //   catApp.error(
-  //     "Failed to initiate RepDriver, stop applicaiton and check errors",
-  //     new Error("Init RepDriver failed"),
-  //   );
-  //   return;
-  // }
-  // repMe.run();
+  if (!config) {
+    catApp.error(
+      "Failed to parse configuration file properly, please check output",
+      null,
+    );
+    exit(1);
+  }
+
+  const reportDriver = new ReportDriver(config);
+  if (false == reportDriver.init()) {
+    catApp.error("Failed to initialize ReportDriver, stop application", null);
+    exit(1);
+  }
+
+  reportDriver.run();
 })();
