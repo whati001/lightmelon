@@ -1,20 +1,28 @@
 ---
 app:
   browser:
-    executable: "/usr/bin/chromium"
+    executable: "C:\\Users\\akarner\\offside\\chromium\\chrome.exe"
     headless: false
+  worker:
+    instances: 1
+    sleepInterval: 1000
   output:
     - type: "file"
       folder: "./result/"
     - type: "http"
       method: "PUT"
-      url: "http://localhost:2711/some/query"
+      url: "https://localhost:2711/some/endpoint"
 auth:
-  - type: "WinAdAuth"
-    name: "winUser"
-    userMail: "andreas.karner@magna.com"
+  - name: "WinADPowerBi"
+    type: "WinAdAuth"
+    impl: "msPowerBi"
+    userMail: "andreas.karner@student.tugraz.at"
 pages:
   - name: "google"
     url: "https://google.com"
-    interval: 10000
-    auth: "winUser"
+    interval: 1
+    auth: "none"
+  - name: "fischRehka"
+    url: "https://fisch.rehka.dev"
+    interval: 2
+    auth: "WinADPowerBi"

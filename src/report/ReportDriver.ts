@@ -123,7 +123,7 @@ export default class ReportDriver {
    */
   private _registerJobs() {
     for (let page of this.config.pages) {
-      const interval = page.interval; //getMsFromMinute(page.interval);
+      const interval = getMsFromMinute(page.interval);
 
       const pageTask: ReportTask = {
         page: page,
@@ -141,7 +141,7 @@ export default class ReportDriver {
       );
 
       catReportDriver.info(
-        `New import task created for ${page.url} and interval: ${page.interval}`,
+        `New import task created for ${page.url} and interval: ${page.interval} minute`,
       );
       this.jobs.push(taskInterval);
     }

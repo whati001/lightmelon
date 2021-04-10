@@ -8,8 +8,10 @@ import puppeteer from "puppeteer-core";
 import { URL } from "url";
 import getAuth from "../auth";
 import { Auth } from "../types/auth";
+import fetch from "node-fetch";
 import {
   AppOutputConfig,
+  AuthConfig,
   BrowserConfig,
   FileOutputConfig,
   HttpOutputConfig,
@@ -114,10 +116,12 @@ export default class ReportWorker {
           catReportWorker.info(
             `Start to store report as http with name ${name}`,
           );
-          // TODO: add some fetch
-          catReportWorker.info(
-            `Finished to store report as http with name ${name}`,
-          );
+          fetch(httpOutput.url.replace('{filename}', name), {
+            method: httpOutput.method,
+            body: repResult
+          })
+          .then(res => catReportWorker.info(`Finished to store report as http with name ${name}`))
+          .catch(err => catReportWorker.warn(`Failed to push html report to http endpoint ${err}`));
           break;
         }
         default: {
@@ -155,43 +159,43 @@ export default class ReportWorker {
     }
   }
 
-  // /**
-  //  * Authenticate before creating the report
-  //  * @param authname authenticate name to use for this report task
-  //  */
-  // public async _doAuthentication(authname: string): Promise<boolean> {
-  //   catReportWorker.info(
-  //     `Page needs some authentication, start authentication for ${authname}`,
-  //   );
+  /**
+   * Authenticate before creating the report
+   * @param auth AuthConfig for login
+   */
+  public async _doAuthentication(authconfig: AuthConfig): Promise<boolean> {
+    catReportWorker.info(
+      `Page needs some authentication, start login with implementation ${authconfig.impl}`,
+    );
 
-  //   if (!this.browser) {
-  //     catReportWorker.warn(
-  //       "Failed to find active browser session, seems like it crashsed, skip task",
-  //     );
-  //     return false;
-  //   }
+    if (!this.browser) {
+      catReportWorker.warn(
+        "Failed to find active browser session, seems like it crashsed, skip task",
+      );
+      return false;
+    }
 
-  //   const auth: Auth = getAuth(authname);
-  //   if (await auth.isLoggedIn(this.browser)) {
-  //     catReportWorker.info(
-  //       "User is still logged in, skip authentication process",
-  //     );
-  //     return true;
-  //   }
+    const auth: Auth = getAuth(authconfig.impl);
+    if (await auth.isLoggedIn(this.browser)) {
+      catReportWorker.info(
+        "User is still logged in, skip authentication process",
+      );
+      return true;
+    }
 
-  //   catReportWorker.info(
-  //     "No active user session found, start new login process",
-  //   );
-  //   if (await auth.login(this.browser, this.authConfig)) {
-  //     catReportWorker.info("User logged in, authentication was successfully");
-  //     return true;
-  //   }
+    catReportWorker.info(
+      "No active user session found, start new login process",
+    );
+    if (await auth.login(this.browser, authconfig)) {
+      catReportWorker.info("User logged in, authentication was successfully");
+      return true;
+    }
 
-  //   catReportWorker.warn(
-  //     "Failed to authenticate user against page, skip RepTask report building",
-  //   );
-  //   return false;
-  // }
+    catReportWorker.warn(
+      "Failed to authenticate user against page, skip RepTask report building",
+    );
+    return false;
+  }
 
   /**
    * Create new Ligthouse report
@@ -205,13 +209,13 @@ export default class ReportWorker {
       return false;
     }
 
-    // if (task.auth) {
-    //   const retDoAuth = await this._doAuthentication(task.auth);
-    //   if (!retDoAuth) {
-    //     await this._closeBrowser();
-    //     return false;
-    //   }
-    // }
+    if (task.auth) {
+      const retDoAuth = await this._doAuthentication(task.auth);
+      if (!retDoAuth) {
+        await this._closeBrowser();
+        return false;
+      }
+    }
 
     try {
       const repResult = await this._getLigthouseReport(task.page.url);
@@ -228,7 +232,7 @@ export default class ReportWorker {
       const resHtmlName = `resHtml_${task.page.name}_${timeStamp}.html`;
       await this._storeReport(repResult.report[0], resHtmlName, task.outputs);
 
-      const resJsonName = `resJson_${task.page.name}_${timeStamp}.html`;
+      const resJsonName = `resJson_${task.page.name}_${timeStamp}.json`;
       await this._storeReport(repResult.report[1], resJsonName, task.outputs);
 
       catReportWorker.info("Finished storing report");

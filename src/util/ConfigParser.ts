@@ -305,6 +305,13 @@ const parseAuthConfig = (
           );
           return undefined;
         }
+        const impl = parseString(winAuth.impl);
+        if (!impl) {
+          logError(
+            `Failed to parse impl for WinAdAuth with index ${index}`,
+          );
+          return undefined;
+        }
         const userMail = parseString(winAuth.userMail);
         if (!userMail) {
           logError(

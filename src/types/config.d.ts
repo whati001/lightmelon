@@ -32,6 +32,7 @@ export type AppConfig = {
 type BasicAuthConfig = {
   type: string;
   name: string;
+  impl: string;
 };
 
 export interface WinAdAuthConfig extends BasicAuthConfig {

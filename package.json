@@ -23,6 +23,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.0",
     "@types/node": "^14.14.10",
+    "@types/node-fetch": "^2.5.10",
     "@types/puppeteer-core": "^5.4.0",
     "@typescript-eslint/eslint-plugin": "^4.9.0",
     "@typescript-eslint/parser": "^4.9.0",
@@ -36,6 +37,7 @@
     "js-yaml": "^4.0.0",
     "lighthouse": "^6.4.1",
     "moment": "^2.29.1",
+    "node-fetch": "^2.6.1",
     "puppeteer-core": "^5.5.0",
     "typescript-logging": "^1.0.0"
   },

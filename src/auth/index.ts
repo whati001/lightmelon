@@ -6,8 +6,8 @@ import NoAuth from "./noAuth";
  * Please register new auths if needed here
  * #TODO: validate if this is a nice valid solution
  */
-export default (name: string): Auth => {
-  switch (name) {
+export default (type: string): Auth => {
+  switch (type) {
     case "msPowerBi":
       return new MsPowerBi();
 

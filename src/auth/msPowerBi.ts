@@ -1,5 +1,5 @@
 import { Auth } from "./../types/auth";
-import { AuthConfig } from "./../types/config";
+import { AuthConfig, WinAdAuthConfig } from "./../types/config";
 import puppeteer from "puppeteer-core";
 import { catAuth } from "./../util/Logger";
 
@@ -8,18 +8,24 @@ const VALIDATE_URL = "https://app.powerbi.com/home";
 const WAIT_TIME = 10 * 1000;
 
 export default class MsPowerBi implements Auth {
+
   public async login(
     browser: puppeteer.Browser,
     auth: AuthConfig,
   ): Promise<boolean> {
     try {
+      if (auth.type !== "WinAdAuth") {
+        console.log('MsPowerBI authentication only supports WinAdAuth yet!!!!');
+        return false;
+      }
+      const winAdAuth = auth as WinAdAuthConfig;
       const page = await browser.newPage();
       await page.goto(LOGIN_URL);
       await page.waitForTimeout(WAIT_TIME);
 
       const emailInput = await page.$(".input[type=email]");
       if (emailInput) {
-        await page.type(".input[type=email]", auth.email);
+        await page.type(".input[type=email]", winAdAuth.userMail);
         await page.click("input[type=submit]");
         await page.waitForTimeout(WAIT_TIME);
 
@@ -27,11 +33,11 @@ export default class MsPowerBi implements Auth {
           return true;
         }
 
-        await page.authenticate({ username: auth.email, password: auth.pwd });
+        await page.authenticate({ username: winAdAuth.userMail, password: winAdAuth.userMail });
         await page.goto(LOGIN_URL);
         await page.waitForTimeout(WAIT_TIME);
 
-        await page.type(".input[type=email]", auth.email);
+        await page.type(".input[type=email]", winAdAuth.userMail);
         await page.click("input[type=submit]");
         await page.waitForTimeout(WAIT_TIME);
       }
