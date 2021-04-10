@@ -1,4 +1,4 @@
-import RepDriver from './RepDriver';
-import RepWorker from './RepWorker';
+import ReportDriver from "./ReportDriver";
+import ReportWorker from "./ReportWorker";
 
-export default { RepDriver, RepWorker };
+export default { ReportDriver: ReportDriver, ReportWorker: ReportWorker };

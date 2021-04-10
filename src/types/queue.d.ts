@@ -1,4 +1,4 @@
-import { ReportOutputs } from './appConfig';
+import { AppOutputConfig, AuthConfig, PageConfig } from "./config";
 
 export interface IQueue<T> {
   enqueue(item: T): void;
@@ -7,8 +7,7 @@ export interface IQueue<T> {
 }
 
 export type ReportTask = {
-  name: string,
-  url: string,
-  auth?: string,
-  outputs: ReportOutputs
-}
+  page: PageConfig;
+  outputs: AppOutputConfig;
+  auth?: AuthConfig;
+};

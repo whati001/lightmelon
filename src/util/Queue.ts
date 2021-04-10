@@ -1,5 +1,5 @@
-import { IQueue } from './../types/queue';
-import { catQueue } from './../util/Logger';
+import { IQueue } from "./../types/queue";
+import { catQueue } from "./../util/Logger";
 
 /**
  * Queue class
@@ -11,7 +11,7 @@ export default class Queue<T> implements IQueue<T> {
    * Queue ctor
    * @param capacity 
    */
-  constructor(private capacity: number = Infinity) { }
+  constructor(private capacity: number = Infinity) {}
 
   /**
    * Enqueue new item to the end of the queue
@@ -19,7 +19,7 @@ export default class Queue<T> implements IQueue<T> {
    */
   public enqueue(item: T): void {
     if (this.size() === this.capacity) {
-      catQueue.warn('Queue has reached max capacity, job get ignored');
+      catQueue.warn("Queue has reached max capacity, job get ignored");
     }
     catQueue.info(`New task enqueue: ${JSON.stringify(item)}`);
     this.storage.push(item);

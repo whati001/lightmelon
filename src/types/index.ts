@@ -1,4 +1,5 @@
-import * as appConfig from './appConfig';
-import * as pageConfig from './pageConfig';
+import * as config from "./config";
+import * as auth from "./auth";
+import * as queue from "./queue";
 
-export default { appConfig, pageConfig };
+export default { config, auth, queue };

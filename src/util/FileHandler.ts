@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 /**
  * Check if file exists
@@ -76,6 +76,13 @@ export const writeRelativeToFile = (file: string, payload: string) => {
  */
 export const writeRelativeToApp = (file: string, payload: string) => {
   writeFile(resolveRelativeToApp(file), payload);
+};
+
+export const readFile = (
+  path: string,
+  useEncoding: BufferEncoding = "utf8",
+) => {
+  return fs.readFileSync(path, { encoding: useEncoding, flag: "r" });
 };
 
 /**
