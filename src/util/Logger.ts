@@ -1,13 +1,20 @@
-import { Category, CategoryServiceFactory, CategoryConfiguration, LogLevel } from 'typescript-logging';
+import {
+  Category,
+  CategoryConfiguration,
+  CategoryServiceFactory,
+  LogLevel,
+} from "typescript-logging";
 
-CategoryServiceFactory.setDefaultConfiguration(new CategoryConfiguration(LogLevel.Debug));
+CategoryServiceFactory.setDefaultConfiguration(
+  new CategoryConfiguration(LogLevel.Debug),
+);
 
 /**
  * Please create new logger categories as needed
  */
-export const catApp = new Category('app');
-export const catRepDriver = new Category('rep-driver', catApp);
-export const catConfig = new Category('config', catApp);
-export const catRepWorker = new Category('rep-worker', catApp);
-export const catQueue = new Category('queue', catApp);
-export const catAuth = new Category('auth', catApp);
+export const catApp = new Category("Lightmelon");
+export const catRepDriver = new Category("ReportDriver", catApp);
+export const catConfig = new Category("ConfigParser", catApp);
+export const catRepWorker = new Category("RepWorker", catApp);
+export const catQueue = new Category("Queue", catApp);
+export const catAuth = new Category("Auth", catApp);
