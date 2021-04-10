@@ -27,53 +27,56 @@ yum install rh-nodejs
 ```
 
 ### Configuration
-The app uses two different configuration files. `app.json` includes everything related to the app itself. Like how to output the reports, worker sleep interval, browser configuration and so forth. Normally there is no need to change much in this file.
-`pages.json` includes an array of pages to test. This file is more of interrest for the user and should be adopted as needed.
+The application uses a single configuration file located in the `config` directory called `lighthouse.yaml`. The path is hardcoded within the app, so you are not able to define it via program arguments. Please feel free to change this via a PR.
 
-#### app.json
-!!! in beta, only file output is supported and without headless. 
-In addition, need to move out the `auth` property from app.json. 
-Please just update the profilePath and userProfile.
-```json
-{
-  "output": [
-    {
-      "type": "file",
-      "folder": "./result/"
-    }
-  ],
-  "browser": {
-    "type": "chromium",
-    "executable": "/usr/bin/chromium",
-    "headless": false,
-    "auth": {
-      "email": "andreas.karner[at]student.tugraz.at",
-      "pwd": "pwdHere"
-    }
-  },
-  "workerInterval": 1000
-}
+The file is separated into three different parts, please see below a detail description for each one:
+
+#### App
+The app section includes all everything which is realated to the app itself. Because the app is not shipped with an browser included, please define the browser executable path properly and if you would like to run it headless or headfull. Because we use [puppeteer](https://github.com/puppeteer/puppeteer) under the hood, the app supports the same browers, but we recommend to use either [chrome](https://www.google.com/chrome/) or [chromium](https://www.chromium.org/). 
+
+We are able to define how many workers we want to spawn, with worker we refer to browser doing lighthouse reports simultaneously. With the sleep time, you can controll how long the worker should sleep until he polls the open task queue. (not sure if sleep works well with js, please fix via PR)
+
+Last part of this configuration is to define where to store the results. Currenlty only "file" and "http" is supported. As you can see, the output is defined as an array, hence you can use multiple instances of "file" and "http".
+
+```yaml
+app:
+  browser:
+    executable: "/usr/bin/chromium"
+    headless: false
+  worker:
+    instances: 1
+    sleepInterval: 1000
+  output:
+    - type: "file"
+      folder: "./result/"
+    - type: "http"
+      method: "PUT"
+      url: "https://localhost:2711/some/endpoint"
+```
+#### Auth
+The authentication config is still a little bit experimental, but please feel free to extend the functionality via a PR. The application was written to check Microsoft Power BI reports, hence only impl msPowerBi is supported yet.
+To define stuff properly, please follow this rules. Property name is used to link pages and authentication together. Please checkout pages section below. Type defines which fields should be set, please checkout `./src/types/config.d.ts` and `./src/utils/ConfigParser.ts` but currenlty only "WinAdAuth" is supported. Impl defines which code should get executed for the login, please checkout `./auth/index.ts` file.
+```yaml
+auth:
+  - name: "WinADPowerBi"
+    type: "WinAdAuth"
+    impl: "msPowerBi"
+    userMail: "andreas.karner@student.tugraz.at"
 ```
 
-#### pages.json
-Please define some pages to validate. Please consider that if you need authentication, that you logged in first.
-Login logic is set via `auth` property, whose needs to match with one in the `src/auth/index.ts` switch statement.
-!!Find better solution than this one.
-```json
-[
-  {
-    "name": "google",
-    "url": "https://google.com",
-    "interval": 2
-  },
-  {
-    "name": "rehkaFish",
-    "url": "https://fisch.rehka.dev",
-    "interval": 1,
-    "auth": "someAuth"
-  }
-]
-
+#### Pages
+Last but not least, this section defined which pages we would like to test.
+Please feel free to add as many pages as you like, please consider that each property is manatory except "auth". If you do not need any authentication, please either remove the prop entirely or set it to "none". If you need one, please set the name from the auth section. Like in the example below, we would liek to use the authentication with the name "WinAdPowerBi" for the page "fischRehka", which tells the application to use the "msPowerBi" code and login as "andreas.karner@student.tugraz.at".
+```yaml
+pages:
+  - name: "google"
+    url: "https://google.com"
+    interval: 1
+    auth: "none"
+  - name: "fischRehka"
+    url: "https://fisch.rehka.dev"
+    interval: 2
+    auth: "WinADPowerBi"
 ```
 
 ### Installation
