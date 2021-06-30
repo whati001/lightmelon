@@ -228,7 +228,7 @@ const parseOutputConfig = (config: object): AppOutputConfig | undefined => {
           return undefined;
         }
         const url = parseString(httpOutput.url);
-        if (!method) {
+        if (!url) {
           logError(`Failed to parse http url from output with index ${index}`);
           return undefined;
         }
@@ -316,6 +316,13 @@ const parseAuthConfig = (
         if (!userMail) {
           logError(
             `Failed to parse userMail for WinAdAuth with index ${index}`,
+          );
+          return undefined;
+        }
+        const userPwd = parseString(winAuth.userPwd);
+        if (!userPwd) {
+          logError(
+            `Failed to parse userPwd for WinAdAuth with index ${index}`,
           );
           return undefined;
         }
@@ -410,27 +417,27 @@ export const parserConfig = (
   const readConfig = yamlJs.load(readFile(configPath));
   if (!readConfig) {
     catConfig.error(
-      `Failed to read Configruation file properly, please verify it's a valid yaml file`,
+      "Failed to read Configruation file properly, please verify it's a valid yaml file",
       new Error("ConfigParseError"),
     );
     return undefined;
   }
 
-  catConfig.info(`Start parsing app section`);
+  catConfig.info("Start parsing app section");
   const appConfig = parseAppConfig((readConfig as LighthouseConfig).app);
   if (appConfig === undefined) {
     return undefined;
   }
-  catConfig.info(`Finished parsing app section successfully`);
+  catConfig.info("Finished parsing app section successfully");
 
-  catConfig.info(`Start parsing auth section`);
+  catConfig.info("Start parsing auth section");
   const authConfig = parseAuthConfig((readConfig as LighthouseConfig).auth);
   if (authConfig === undefined) {
     return undefined;
   }
-  catConfig.info(`Finished parsing auth section successfully`);
+  catConfig.info("Finished parsing auth section successfully");
 
-  catConfig.info(`Start parsing page section`);
+  catConfig.info("Start parsing page section");
   const pageConfig = parsePageConfig(
     (readConfig as LighthouseConfig).pages,
     authConfig.map((x) => x.name),
@@ -438,7 +445,7 @@ export const parserConfig = (
   if (pageConfig === undefined) {
     return undefined;
   }
-  catConfig.info(`Finished parsing page section successfully`);
+  catConfig.info("Finished parsing page section successfully");
 
   catConfig.info("Finished parsing configuration file");
   return { app: appConfig, auth: authConfig, pages: pageConfig };

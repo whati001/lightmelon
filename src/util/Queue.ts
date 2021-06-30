@@ -21,7 +21,7 @@ export default class Queue<T> implements IQueue<T> {
     if (this.size() === this.capacity) {
       catQueue.warn("Queue has reached max capacity, job get ignored");
     }
-    catQueue.info(`New task enqueue: ${JSON.stringify(item)}`);
+    catQueue.info("New task enqueue");
     this.storage.push(item);
   }
 
@@ -30,7 +30,7 @@ export default class Queue<T> implements IQueue<T> {
    */
   public dequeue(): T | undefined {
     const item = this.storage.shift();
-    catQueue.info(`New task dequeued: ${JSON.stringify(item)}`);
+    catQueue.info("New task dequeued");
     return item;
   }
 

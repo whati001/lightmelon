@@ -24,6 +24,7 @@
     "@types/js-yaml": "^4.0.0",
     "@types/node": "^14.14.10",
     "@types/node-fetch": "^2.5.10",
+    "@types/prompt-sync": "^4.1.0",
     "@types/puppeteer-core": "^5.4.0",
     "@typescript-eslint/eslint-plugin": "^4.9.0",
     "@typescript-eslint/parser": "^4.9.0",
@@ -35,10 +36,13 @@
   },
   "dependencies": {
     "js-yaml": "^4.0.0",
-    "lighthouse": "^6.4.1",
+    "lighthouse": "^8.0.0",
     "moment": "^2.29.1",
     "node-fetch": "^2.6.1",
+    "prompt-sync": "^4.2.0",
     "puppeteer-core": "^5.5.0",
+    "rotating-file-stream": "^2.1.5",
+    "tslog": "^3.2.0",
     "typescript-logging": "^1.0.0"
   },
   "bin": "./build/app.js",

@@ -1,20 +1,41 @@
-import {
-  Category,
-  CategoryConfiguration,
-  CategoryServiceFactory,
-  LogLevel,
-} from "typescript-logging";
+import { ILogObject, Logger } from "tslog";
+import { createStream } from "rotating-file-stream";
+import { createFolder } from "./FileHandler";
 
-CategoryServiceFactory.setDefaultConfiguration(
-  new CategoryConfiguration(LogLevel.Debug),
+// create rotating file stream
+const rotatingFileStream = ((filename: string) => {
+  const stream = createStream(`./logs/${filename}`, {
+    size: "10M", // rotate every 10 MegaBytes written
+    interval: "1d", // rotate daily
+    compress: "gzip", // compress rotated files
+  });
+
+  return stream;
+})("lightmelon.log");
+
+// create log transport pipeline
+const logToTransport = (logObject: ILogObject) => {
+  rotatingFileStream.write(JSON.stringify(logObject) + "\n");
+};
+
+// create main logger
+export const catApp: Logger = new Logger({ name: "Lightmelon" });
+catApp.attachTransport(
+  {
+    silly: logToTransport,
+    debug: logToTransport,
+    trace: logToTransport,
+    info: logToTransport,
+    warn: logToTransport,
+    error: logToTransport,
+    fatal: logToTransport,
+  },
+  "debug",
 );
 
-/**
- * Please create new logger categories as needed
- */
-export const catApp = new Category("Lightmelon");
-export const catReportDriver = new Category("ReportDriver", catApp);
-export const catConfig = new Category("ConfigParser", catApp);
-export const catReportWorker = new Category("RepWorker", catApp);
-export const catQueue = new Category("Queue", catApp);
-export const catAuth = new Category("Auth", catApp);
+// create child logger
+export const catReportDriver = catApp.getChildLogger({ name: "ReportDriver" });
+export const catConfig = catApp.getChildLogger({ name: "ConfigParser" });
+export const catReportWorker = catApp.getChildLogger({ name: "RepWorker" });
+export const catQueue = catApp.getChildLogger({ name: "Queue" });
+export const catAuth = catApp.getChildLogger({ name: "Auth" });

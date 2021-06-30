@@ -1,7 +1,7 @@
 ---
 app:
   browser:
-    executable: "C:\\Users\\akarner\\offside\\chromium\\chrome.exe"
+    executable: "/usr/bin/chromium"
     headless: false
   worker:
     instances: 1
@@ -11,18 +11,19 @@ app:
       folder: "./result/"
     - type: "http"
       method: "PUT"
-      url: "https://localhost:2711/some/endpoint"
+      url: "https://localhost:2711/some/endpoint/{filename}"
 auth:
   - name: "WinADPowerBi"
     type: "WinAdAuth"
     impl: "msPowerBi"
     userMail: "andreas.karner@student.tugraz.at"
+    userPwd: "notNeededForWindowsAd"
 pages:
   - name: "google"
     url: "https://google.com"
-    interval: 1
-    auth: "none"
+    interval: 0.1
+    #auth: "none"
   - name: "fischRehka"
     url: "https://fisch.rehka.dev"
-    interval: 2
-    auth: "WinADPowerBi"
+    interval: 5
+    #auth: "WinADPowerBi"

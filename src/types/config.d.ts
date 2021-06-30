@@ -37,6 +37,7 @@ type BasicAuthConfig = {
 
 export interface WinAdAuthConfig extends BasicAuthConfig {
   userMail: string;
+  userPwd: string;
 }
 
 export interface BasicUserAuthConfig extends BasicAuthConfig {

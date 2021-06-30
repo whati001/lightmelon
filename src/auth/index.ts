@@ -1,6 +1,6 @@
-import { Auth } from "../types/auth";
-import MsPowerBi from "./msPowerBi";
-import NoAuth from "./noAuth";
+import { Auth } from '../types/auth';
+import MsPowerBi from './msPowerBi';
+import NoAuth from './noAuth';
 
 /**
  * Please register new auths if needed here
@@ -8,7 +8,7 @@ import NoAuth from "./noAuth";
  */
 export default (type: string): Auth => {
   switch (type) {
-    case "msPowerBi":
+    case 'msPowerBi':
       return new MsPowerBi();
 
     default:

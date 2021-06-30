@@ -12,10 +12,8 @@ import fetch from "node-fetch";
 import {
   AppOutputConfig,
   AuthConfig,
-  BrowserConfig,
   FileOutputConfig,
   HttpOutputConfig,
-  PageAuthConfig,
 } from "../types/config";
 
 // @ts-ignore
@@ -31,6 +29,7 @@ export default class ReportWorker {
   private sleepInterval: number;
   private browser: puppeteer.Browser | undefined;
   private launchConfig: puppeteer.LaunchOptions;
+  private isAlive: boolean;
 
   /**
   * RepWorker constructor
@@ -50,6 +49,7 @@ export default class ReportWorker {
     this.queue = queue;
     this.browser = undefined;
     this.launchConfig = launchConfig;
+    this.isAlive = true;
   }
 
   /**
@@ -83,6 +83,7 @@ export default class ReportWorker {
   */
   public async kill() {
     this.queue.clear();
+    this.isAlive = false;
     this._closeBrowser();
   }
 
@@ -100,15 +101,23 @@ export default class ReportWorker {
     for (let output of outputs) {
       switch (output.type) {
         case "file": {
-          const fileOutput = output as FileOutputConfig;
-          catReportWorker.info(
-            `Start to store report as file with name ${name}`,
-          );
-          createFolder(fileOutput.folder);
-          writeRelativeToApp(`/${fileOutput.folder}/${name}`, repResult);
-          catReportWorker.info(
-            `Finished to store report as file with name ${name}`,
-          );
+          try {
+            const fileOutput = output as FileOutputConfig;
+            catReportWorker.info(
+              `Start to store report as file with name ${name}`,
+            );
+            createFolder(fileOutput.folder);
+            writeRelativeToApp(`/${fileOutput.folder}/${name}`, repResult);
+            catReportWorker.info(
+              `Finished to store report as file with name ${name}`,
+            );
+          } catch (e) {
+            catReportWorker.error(
+              `Failed to store file result for name ${name}`,
+              null,
+            );
+            catReportWorker.error(e, null);
+          }
           break;
         }
         case "http": {
@@ -116,12 +125,24 @@ export default class ReportWorker {
           catReportWorker.info(
             `Start to store report as http with name ${name}`,
           );
-          fetch(httpOutput.url.replace('{filename}', name), {
+          const endpointUrl = httpOutput.url.replace("{filename}", name);
+          catReportWorker.info(
+            `Start to store report to http endpoint via url: ${endpointUrl}`,
+          );
+          fetch(endpointUrl, {
             method: httpOutput.method,
-            body: repResult
+            body: repResult,
           })
-          .then(res => catReportWorker.info(`Finished to store report as http with name ${name}`))
-          .catch(err => catReportWorker.warn(`Failed to push html report to http endpoint ${err}`));
+            .then((res) =>
+              catReportWorker.info(
+                `Finished to store report as http with name ${name}`,
+              )
+            )
+            .catch((err) =>
+              catReportWorker.warn(
+                `Failed to push html report to http endpoint ${err}`,
+              )
+            );
           break;
         }
         default: {
@@ -142,7 +163,7 @@ export default class ReportWorker {
   private async _getLigthouseReport(url: string): any {
     if (this.browser) {
       const lighthouseConfig = {
-        logLevel: "info",
+        logLevel: "error",
         output: ["html", "json"],
         port: (new URL(this.browser.wsEndpoint())).port,
       };
@@ -227,7 +248,7 @@ export default class ReportWorker {
       );
 
       catReportWorker.info("Start storing reports");
-      const timeStamp: string = moment().format("YYYYMMDD-hmmss");
+      const timeStamp: string = moment().format("YYYYMMDD-HHmmss");
 
       const resHtmlName = `resHtml_${task.page.name}_${timeStamp}.html`;
       await this._storeReport(repResult.report[0], resHtmlName, task.outputs);
@@ -249,7 +270,7 @@ export default class ReportWorker {
    * Start ReportWorker and keep working until kill receives
    */
   public async start() {
-    while (true) {
+    while (this.isAlive) {
       if (this.queue.size() == 0) {
         await sleep(this.sleepInterval);
       } else {
