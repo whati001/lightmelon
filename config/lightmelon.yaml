@@ -2,7 +2,7 @@
 app:
   browser:
     executable: "/usr/bin/chromium"
-    headless: false
+    headless: true
   worker:
     instances: 1
     sleepInterval: 1000

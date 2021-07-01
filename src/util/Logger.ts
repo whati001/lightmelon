@@ -1,41 +1,61 @@
 import { ILogObject, Logger } from "tslog";
 import { createStream } from "rotating-file-stream";
-import { createFolder } from "./FileHandler";
+import { Err, Ok, Result } from "ts-results";
 
-// create rotating file stream
-const rotatingFileStream = ((filename: string) => {
-  const stream = createStream(`./logs/${filename}`, {
-    size: "10M", // rotate every 10 MegaBytes written
-    interval: "1d", // rotate daily
-    compress: "gzip", // compress rotated files
-  });
+// main logger name
+const MAIN_LOGGER_NAME = "Lightmelon";
+const LOG_FILE_PATH = "./logs/lightmelon.log";
 
-  return stream;
-})("lightmelon.log");
+const stream = createStream(LOG_FILE_PATH, {
+  size: "10M", // rotate every 10 MegaBytes written
+  interval: "1d", // rotate daily
+  compress: "gzip", // compress rotated files
+});
 
-// create log transport pipeline
-const logToTransport = (logObject: ILogObject) => {
-  rotatingFileStream.write(JSON.stringify(logObject) + "\n");
+// store all current active logger instances in this dict
+const activeLogger = new Map<string, Logger>();
+
+const getLogger = (name: string): Result<Logger, string> => {
+  if (0 === activeLogger.size || !activeLogger.has(MAIN_LOGGER_NAME)) {
+    const rootLogger = new Logger({ name: MAIN_LOGGER_NAME });
+    activeLogger.set(MAIN_LOGGER_NAME, rootLogger);
+
+    // log object transport function
+    const logToTransport = (logObject: ILogObject) => {
+      stream.write(JSON.stringify(logObject) + "\n");
+    };
+
+    rootLogger.attachTransport(
+      {
+        silly: logToTransport,
+        debug: logToTransport,
+        trace: logToTransport,
+        info: logToTransport,
+        warn: logToTransport,
+        error: logToTransport,
+        fatal: logToTransport,
+      },
+      "debug",
+    );
+  }
+
+  const childLogger = activeLogger.get(name);
+  if (childLogger) {
+    return new Ok(childLogger);
+  }
+
+  const mainLogger = activeLogger.get(MAIN_LOGGER_NAME);
+  if (mainLogger) {
+    const childLogger = mainLogger.getChildLogger({ name: name });
+    activeLogger.set(name, childLogger);
+    return new Ok(childLogger);
+  }
+
+  return new Err("Failed to find root logger instance");
 };
 
-// create main logger
-export const catApp: Logger = new Logger({ name: "Lightmelon" });
-catApp.attachTransport(
-  {
-    silly: logToTransport,
-    debug: logToTransport,
-    trace: logToTransport,
-    info: logToTransport,
-    warn: logToTransport,
-    error: logToTransport,
-    fatal: logToTransport,
-  },
-  "debug",
-);
+const closeLogger = () => {
+  stream.end();
+};
 
-// create child logger
-export const catReportDriver = catApp.getChildLogger({ name: "ReportDriver" });
-export const catConfig = catApp.getChildLogger({ name: "ConfigParser" });
-export const catReportWorker = catApp.getChildLogger({ name: "RepWorker" });
-export const catQueue = catApp.getChildLogger({ name: "Queue" });
-export const catAuth = catApp.getChildLogger({ name: "Auth" });
+export { closeLogger, getLogger };

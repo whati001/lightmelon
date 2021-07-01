@@ -1,4 +1,3 @@
-import { catReportWorker } from "../util/Logger";
 import moment from "moment";
 import { createFolder, writeRelativeToApp } from "../util/FileHandler";
 import Queue from "../util/Queue";
@@ -15,14 +14,12 @@ import {
   FileOutputConfig,
   HttpOutputConfig,
 } from "../types/config";
+import { Logger } from "tslog";
+import { getLogger } from "../util/Logger";
 
 // @ts-ignore
 const lighthouse = require("lighthouse");
 
-/**
- * ReportWorker class
- * Fetches task from queue and creates a report for each enqued task
- */
 export default class ReportWorker {
   private workerId: number;
   private queue: Queue<ReportTask>;
@@ -30,37 +27,31 @@ export default class ReportWorker {
   private browser: puppeteer.Browser | undefined;
   private launchConfig: puppeteer.LaunchOptions;
   private isAlive: boolean;
+  private logger: Logger;
 
-  /**
-  * RepWorker constructor
-  * @param workerId unique id for this worker
-  * @param sleepInterval sleep before try to dequeue new task
-  * @param launchConfig for puppeteer browser
-  * @param queue to get tasks from
-  */
   constructor(
     workerId: number,
     sleepInterval: number,
     launchConfig: puppeteer.LaunchOptions,
     queue: Queue<ReportTask>,
   ) {
+    this.logger = getLogger(`RepWorker-${workerId}`).unwrap();
+    this.logger.info("Start creating new ReportWorker instance");
     this.workerId = workerId;
     this.sleepInterval = sleepInterval;
     this.queue = queue;
     this.browser = undefined;
     this.launchConfig = launchConfig;
     this.isAlive = true;
+    this.logger.info("Done creating new ReportWorker instance");
   }
 
-  /**
-   * Start new Browser instance
-   */
   private async _startBrowser(): Promise<boolean> {
     try {
       this.browser = await puppeteer.launch(this.launchConfig);
       return true;
     } catch (e) {
-      catReportWorker.warn(
+      this.logger.warn(
         "Failed to start browser instance, skip RepTask report building",
       );
       console.debug(e);
@@ -68,9 +59,6 @@ export default class ReportWorker {
     }
   }
 
-  /**
-   * Close browser instance
-   */
   private async _closeBrowser() {
     if (this.browser) {
       await this.browser.close();
@@ -78,23 +66,15 @@ export default class ReportWorker {
     }
   }
 
-  /**
-  * Kill ReportWorker instance
-  */
   public async kill() {
     this.queue.clear();
     this.isAlive = false;
     this._closeBrowser();
   }
 
-  /**
-   * Store report result to all passed outputs
-   * @param repResult report object to store
-   * @param name name to use for storing the result
-   * @param outputs outputs to store report to
-   */
   private async _storeReport(
     repResult: string,
+    subDir: string,
     name: string,
     outputs: AppOutputConfig,
   ) {
@@ -103,50 +83,51 @@ export default class ReportWorker {
         case "file": {
           try {
             const fileOutput = output as FileOutputConfig;
-            catReportWorker.info(
-              `Start to store report as file with name ${name}`,
+            this.logger.info(
+              `Store report as file with name ${name} to ${fileOutput.folder}`,
             );
-            createFolder(fileOutput.folder);
-            writeRelativeToApp(`/${fileOutput.folder}/${name}`, repResult);
-            catReportWorker.info(
+            createFolder(`${fileOutput.folder}/${subDir}`);
+            writeRelativeToApp(
+              `/${fileOutput.folder}/${subDir}/${name}`,
+              repResult,
+            );
+            this.logger.info(
               `Finished to store report as file with name ${name}`,
             );
           } catch (e) {
-            catReportWorker.error(
-              `Failed to store file result for name ${name}`,
+            this.logger.error(
+              `Failed to store report as file with name ${name}`,
               null,
             );
-            catReportWorker.error(e, null);
+            this.logger.error(e, null);
           }
           break;
         }
         case "http": {
           const httpOutput = output as HttpOutputConfig;
-          catReportWorker.info(
-            `Start to store report as http with name ${name}`,
+          const endpointUrl = httpOutput.url.replace(
+            "{filename}",
+            `${subDir}/${name}`,
           );
-          const endpointUrl = httpOutput.url.replace("{filename}", name);
-          catReportWorker.info(
-            `Start to store report to http endpoint via url: ${endpointUrl}`,
+          this.logger.info(
+            `Store report via http with name ${name} to ${endpointUrl}`,
           );
           fetch(endpointUrl, {
             method: httpOutput.method,
             body: repResult,
-          })
-            .then((res) =>
-              catReportWorker.info(
-                `Finished to store report as http with name ${name}`,
-              )
+          }).then((res) =>
+            this.logger.info(
+              `Finished to store report via http with name ${name} to ${endpointUrl}`,
             )
-            .catch((err) =>
-              catReportWorker.warn(
-                `Failed to push html report to http endpoint ${err}`,
-              )
-            );
+          ).catch((err) =>
+            this.logger.warn(
+              `Failed to store report via http with name ${name} to ${endpointUrl}`,
+            )
+          );
           break;
         }
         default: {
-          catReportWorker.warn(
+          this.logger.warn(
             `Unsupported output type ${output.type} used, please check documentation`,
           );
           break;
@@ -155,10 +136,6 @@ export default class ReportWorker {
     }
   }
 
-  /**
-   * Create new report with ligthouse framework
-   * @param url to create report for
-   */
   // @ts-ignore
   private async _getLigthouseReport(url: string): any {
     if (this.browser) {
@@ -173,24 +150,20 @@ export default class ReportWorker {
 
       return runnerResult;
     } else {
-      catReportWorker.warn(
+      this.logger.warn(
         "No active browser instance found, skip current report creation",
       );
       return undefined;
     }
   }
 
-  /**
-   * Authenticate before creating the report
-   * @param auth AuthConfig for login
-   */
   public async _doAuthentication(authconfig: AuthConfig): Promise<boolean> {
-    catReportWorker.info(
+    this.logger.info(
       `Page needs some authentication, start login with implementation ${authconfig.impl}`,
     );
 
     if (!this.browser) {
-      catReportWorker.warn(
+      this.logger.warn(
         "Failed to find active browser session, seems like it crashsed, skip task",
       );
       return false;
@@ -198,32 +171,30 @@ export default class ReportWorker {
 
     const auth: Auth = getAuth(authconfig.impl);
     if (await auth.isLoggedIn(this.browser)) {
-      catReportWorker.info(
+      this.logger.info(
         "User is still logged in, skip authentication process",
       );
       return true;
     }
 
-    catReportWorker.info(
+    this.logger.info(
       "No active user session found, start new login process",
     );
     if (await auth.login(this.browser, authconfig)) {
-      catReportWorker.info("User logged in, authentication was successfully");
+      this.logger.info("User logged in, authentication was successfully");
       return true;
     }
 
-    catReportWorker.warn(
+    this.logger.warn(
       "Failed to authenticate user against page, skip RepTask report building",
     );
     return false;
   }
 
-  /**
-   * Create new Ligthouse report
-   * @param task task to create report for
-   */
   public async createReport(task: ReportTask): Promise<boolean> {
-    catReportWorker.info(`Start creating new report for url ${task.page.url}`);
+    this.logger.info(
+      `Start new report creation for url ${task.page.url} on worker: ${this.workerId}`,
+    );
 
     const retStartBrowser = await this._startBrowser();
     if (!retStartBrowser) {
@@ -241,34 +212,43 @@ export default class ReportWorker {
     try {
       const repResult = await this._getLigthouseReport(task.page.url);
       if (!repResult) {
-        catReportWorker.warn("Failed to create report, skip storing results");
+        this.logger.warn("Failed to create report, skip storing results");
       }
-      catReportWorker.info(
+      this.logger.info(
         `Created report for url ${task.page.url} successfully`,
       );
 
-      catReportWorker.info("Start storing reports");
+      this.logger.info("Start storing reports");
       const timeStamp: string = moment().format("YYYYMMDD-HHmmss");
 
+      const resHtmlSubDir = `html/${task.page.name}`;
       const resHtmlName = `resHtml_${task.page.name}_${timeStamp}.html`;
-      await this._storeReport(repResult.report[0], resHtmlName, task.outputs);
+      await this._storeReport(
+        repResult.report[0],
+        resHtmlSubDir,
+        resHtmlName,
+        task.outputs,
+      );
 
+      const resJsonSubDir = `json/${task.page.name}`;
       const resJsonName = `resJson_${task.page.name}_${timeStamp}.json`;
-      await this._storeReport(repResult.report[1], resJsonName, task.outputs);
+      await this._storeReport(
+        repResult.report[1],
+        resJsonSubDir,
+        resJsonName,
+        task.outputs,
+      );
 
-      catReportWorker.info("Finished storing report");
+      this.logger.info("Finished storing report");
 
       return true;
     } catch (e) {
-      catReportWorker.warn("Failed to create report, keep trying...");
+      this.logger.warn("Failed to create report, keep trying...");
       console.debug(e);
       return false;
     }
   }
 
-  /**
-   * Start ReportWorker and keep working until kill receives
-   */
   public async start() {
     while (this.isAlive) {
       if (this.queue.size() == 0) {
@@ -276,7 +256,6 @@ export default class ReportWorker {
       } else {
         const task = this.queue.dequeue();
         if (task) {
-          catReportWorker.info(`Process some task on Worker ${this.workerId}`);
           await this.createReport(task);
         }
       }

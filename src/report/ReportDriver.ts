@@ -1,112 +1,44 @@
 import ReportWorker from "./ReportWorker";
 import Queue from "../util/Queue";
 import { ReportTask } from "../types/queue";
-import { catReportDriver, catReportWorker } from "../util/Logger";
 import { getMsFromMinute } from "../util/Utils";
-import {
-  AppOutputConfig,
-  BrowserConfig,
-  LighthouseConfig,
-  PageConfig,
-} from "../types/config";
+import { LighthouseConfig } from "../types/config";
 import { LaunchOptions } from "puppeteer-core";
+import { getLogger } from "../util/Logger";
+import { Logger } from "tslog";
+import { Err, Ok, Result } from "ts-results";
 
-/**
- * ReportDriver class
- * Holds entire configuration and worker information
- */
 export default class ReportDriver {
   private config: LighthouseConfig;
   private jobs: number[];
   private queue: Queue<ReportTask>;
   private workers: ReportWorker[];
+  private logger: Logger;
 
-  /**
-   * ReportDriver ctor
-   * @param configPath configuration directory path relative to app home
-   */
   constructor(config: LighthouseConfig) {
+    this.logger = getLogger("ReportDriver").unwrap();
+    this.logger.info(
+      "Start creating new ReportDriver instance from given configuration",
+    );
     this.config = config;
     this.jobs = [];
     this.queue = new Queue<ReportTask>(50);
     this.workers = [];
-    catReportDriver.info(
-      "Created new Report Driver instance, please call init() before run() method",
+
+    this.logger.info(
+      "Created new ReportDriver instance properly",
     );
   }
 
-  /**
-   * Register all needed signal handlers
-   */
-  private _registerSignalHandler() {
-    catReportDriver.info("Start register process signal handler");
-    process.on("SIGINT", () => {
-      catReportDriver.info("Shutdown App started");
-
-      catReportDriver.info("Start clearning all running intervals");
-      for (let task of this.jobs) {
-        catReportDriver.info(`Clear interval: ${task}`);
-        clearInterval(task);
-      }
-      this.jobs = [];
-      catReportDriver.info("Done clearning all running intervals");
-
-      catReportDriver.info("Stop RepWorkers");
-      for (const worker of this.workers) {
-        if (worker) {
-          worker.kill().then((res) => {
-            catReportWorker.info("Stopped ReportWorker");
-          });
-        }
-      }
-      catReportDriver.info(
-        "App will shutdown soon, please wait until all workers have stopped",
-      );
-    });
-
-    catReportDriver.info("Done register process signal handler");
-    return true;
-  }
-
-  /**
-   * Create and return browser configuration
-   */
-  private _parseBroserConfig(bConfig: BrowserConfig): LaunchOptions {
+  private _parseBrowserConfig(): LaunchOptions {
     const options: LaunchOptions = {
-      headless: bConfig.headless,
-      executablePath: bConfig.executable,
+      headless: this.config.app.browser.headless,
+      executablePath: this.config.app.browser.executable,
     };
 
     return options;
   }
 
-  /**
-   * Init ReportDriver class instance
-   */
-  public init(): boolean {
-    catReportDriver.info("Start init ReportDriver instance.");
-    this._registerSignalHandler();
-
-    const launchConfig = this._parseBroserConfig(this.config.app.browser);
-
-    for (let idx = 0; idx < this.config.app.worker.instances; idx++) {
-      const worker = new ReportWorker(
-        idx,
-        this.config.app.worker.sleepInterval,
-        launchConfig,
-        this.queue,
-      );
-      catReportDriver.info(`Started new ReportWorker with id: ${idx}`);
-      this.workers.push(worker);
-    }
-    catReportDriver.info("Done init ReportDriver instance.");
-
-    return true;
-  }
-
-  /**
-   * Start all workers
-   */
   private _startWorkers() {
     for (const worker of this.workers) {
       worker.start();
@@ -118,9 +50,6 @@ export default class ReportDriver {
     return (auth.length === 1) ? auth[0] : undefined;
   }
 
-  /**
-   * Register new jobs realized via js timout function
-   */
   private _registerJobs() {
     for (let page of this.config.pages) {
       const interval = getMsFromMinute(page.interval);
@@ -140,31 +69,82 @@ export default class ReportDriver {
         pageTask,
       );
 
-      catReportDriver.info(
+      this.logger.info(
         `New import task created for ${page.url} and interval: ${page.interval} minute`,
       );
       this.jobs.push(taskInterval);
     }
   }
 
-  /**
-   * Run ReportDriver instance
-   */
-  public run() {
+  public init(): Result<boolean, string> {
+    this.logger.info(
+      "Start initiating ReportDriver instance for given configuration",
+    );
+
+    const launchConfig = this._parseBrowserConfig();
+
+    if (0 === this.config.app.worker.instances) {
+      return new Err("WorkerCount is set to 0, please use at least 1 worker");
+    }
+
+    for (let idx = 0; idx < this.config.app.worker.instances; idx++) {
+      const worker = new ReportWorker(
+        idx,
+        this.config.app.worker.sleepInterval,
+        launchConfig,
+        this.queue,
+      );
+      this.logger.info(`Started new ReportWorker with id: ${idx}`);
+      this.workers.push(worker);
+    }
+    this.logger.info(
+      "Done initiating ReportDriver instance for given configuration",
+    );
+
+    return new Ok(true);
+  }
+
+  public kill(): void {
+    this.logger.info(
+      "ReportDriver received kill request, start shutdown gracefully",
+    );
+
+    this.logger.info("Start stopping all import tasks");
+    for (let task of this.jobs) {
+      this.logger.info(`Stopped import task with id: ${task}`);
+      clearInterval(task);
+    }
+    this.jobs = [];
+    this.logger.info("Stopped all importer tasks properly");
+
+    this.logger.info("Start signal kill to all ReportWorkers");
+    for (const worker of this.workers) {
+      if (worker) {
+        worker.kill();
+      }
+    }
+    this.logger.info("Finished signal kill to all ReportWorkers");
+
+    this.logger.info(
+      "ReportDriver will shutdown soon, please wait until all workers have stopped",
+    );
+  }
+
+  public run(): Result<boolean, string> {
     const startDateTime: Date = new Date();
-    catReportDriver.info(
+    this.logger.info(
       `Started ReportDriver to import tasks at ${startDateTime}`,
     );
 
     if (0 === this.workers.length) {
-      catReportDriver.warn(
+      this.logger.warn(
         "ReportDriver is not initiated, please call init() before run()",
       );
-      return false;
+      return Err("ReportDriver is not initialize properly");
     }
 
     this._startWorkers();
     this._registerJobs();
-    return true;
+    return new Ok(true);
   }
 }

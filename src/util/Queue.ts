@@ -1,17 +1,21 @@
+import { Logger } from "tslog";
 import { IQueue } from "./../types/queue";
-import { catQueue } from "./../util/Logger";
+import { getLogger } from "./Logger";
 
 /**
  * Queue class
  */
 export default class Queue<T> implements IQueue<T> {
   private storage: T[] = [];
+  private logger: Logger;
 
   /**
    * Queue ctor
    * @param capacity 
    */
-  constructor(private capacity: number = Infinity) {}
+  constructor(private capacity: number = Infinity) {
+    this.logger = getLogger("Queue").unwrap();
+  }
 
   /**
    * Enqueue new item to the end of the queue
@@ -19,9 +23,11 @@ export default class Queue<T> implements IQueue<T> {
    */
   public enqueue(item: T): void {
     if (this.size() === this.capacity) {
-      catQueue.warn("Queue has reached max capacity, job get ignored");
+      this.logger.warn(
+        "Queue has reached max capacity, skip enqueue request to avoid overloading Worker",
+      );
     }
-    catQueue.info("New task enqueue");
+    this.logger.info("Queue has enqueued new task");
     this.storage.push(item);
   }
 
@@ -30,7 +36,12 @@ export default class Queue<T> implements IQueue<T> {
    */
   public dequeue(): T | undefined {
     const item = this.storage.shift();
-    catQueue.info("New task dequeued");
+    if (item) {
+      this.logger.info("Queue has dequeued new task");
+      return item;
+    }
+
+    this.logger.info("Queue is empty, nothing to dequeue");
     return item;
   }
 
