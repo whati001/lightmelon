@@ -12,7 +12,8 @@ import {
 } from "../types/config";
 import * as yamlJs from "js-yaml";
 import { fileExists, readFile, resolveFullPath } from "./FileHandler";
-import { catConfig } from "./Logger";
+import { Err, Ok, Result } from "ts-results";
+import { getLogger } from "./Logger";
 
 /**
  * Default values for the configuration
@@ -32,12 +33,14 @@ const DEF_CONFIG: LighthouseConfig = {
   }],
 };
 
+const LOGGER = getLogger("Config").unwrap();
+
 /**
  * Trace error to output stream, should include some information for the user to fix the configuration file
  * @param text prefix of error message
  */
 const logError = (text: string) => {
-  catConfig.error(`${text}, please checkout documentation`, null);
+  LOGGER.error(`${text}, please checkout documentation`, null);
 };
 
 /**
@@ -403,50 +406,52 @@ const parsePageConfig = (
  */
 export const parserConfig = (
   configPath: string,
-): LighthouseConfig | undefined => {
-  catConfig.info("Start parsing configuration file");
+): Result<LighthouseConfig, string> => {
+  LOGGER.info("Start parsing configuration file");
   if (!fileExists(configPath)) {
-    catConfig.error(
+    LOGGER.error(
       `Configuration file ${configPath} not found`,
       new Error("ConfigFileNotFound"),
     );
-    return undefined;
+    return new Err(`Configuration file ${configPath} not found`);
   }
 
-  catConfig.info(`Read configuration file ${configPath} from disk`);
+  LOGGER.info(`Read configuration file ${configPath} from disk`);
   const readConfig = yamlJs.load(readFile(configPath));
   if (!readConfig) {
-    catConfig.error(
+    LOGGER.error(
       "Failed to read Configruation file properly, please verify it's a valid yaml file",
       new Error("ConfigParseError"),
     );
-    return undefined;
+    return new Err(
+      "Failed to read Configruation file properly, please verify it's a valid yaml file",
+    );
   }
 
-  catConfig.info("Start parsing app section");
+  LOGGER.info("Start parsing app section");
   const appConfig = parseAppConfig((readConfig as LighthouseConfig).app);
   if (appConfig === undefined) {
-    return undefined;
+    return new Err("Failed to parse AppConfig section");
   }
-  catConfig.info("Finished parsing app section successfully");
+  LOGGER.info("Finished parsing app section successfully");
 
-  catConfig.info("Start parsing auth section");
+  LOGGER.info("Start parsing auth section");
   const authConfig = parseAuthConfig((readConfig as LighthouseConfig).auth);
   if (authConfig === undefined) {
-    return undefined;
+    return new Err("Failed to parse AuthConfig section");
   }
-  catConfig.info("Finished parsing auth section successfully");
+  LOGGER.info("Finished parsing auth section successfully");
 
-  catConfig.info("Start parsing page section");
+  LOGGER.info("Start parsing page section");
   const pageConfig = parsePageConfig(
     (readConfig as LighthouseConfig).pages,
     authConfig.map((x) => x.name),
   );
   if (pageConfig === undefined) {
-    return undefined;
+    return new Err("Failed to parse PageConfig section");
   }
-  catConfig.info("Finished parsing page section successfully");
+  LOGGER.info("Finished parsing page section successfully");
 
-  catConfig.info("Finished parsing configuration file");
-  return { app: appConfig, auth: authConfig, pages: pageConfig };
+  LOGGER.info("Finished parsing configuration file");
+  return new Ok({ app: appConfig, auth: authConfig, pages: pageConfig });
 };

@@ -42,6 +42,7 @@
     "prompt-sync": "^4.2.0",
     "puppeteer-core": "^5.5.0",
     "rotating-file-stream": "^2.1.5",
+    "ts-results": "^3.3.0",
     "tslog": "^3.2.0",
     "typescript-logging": "^1.0.0"
   },
