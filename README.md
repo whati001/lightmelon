@@ -1,11 +1,13 @@
 
 # Lightmelon
 
-Simple task runner to validate webpage performance continuesly with [Google Chrome Lighthouse](https://developers.google.com/web/tools/lighthouse/).
+Lightmelon should simplify iterativly webpage performance testing. Google offers a nice solution for this, called [Google Chrome Lighthouse](https://developers.google.com/web/tools/lighthouse/), it allows to test if the page performs well or not.
 
-Please consider that this project is still in beta. Hence, it may break by running it as a long time job.
+Unfortunately, it does not allow out of the box to run it time based. This could be solved easily via crontab, but it also does not support pages with logins.
 
-To support authentication against pages, we launch and support browser driving via [puppeteer-core](https://www.npmjs.com/package/puppeteer-core)
+To tackle those problems, `lightmelon` was created. It supports login via the [puppeteer-core](https://www.npmjs.com/package/puppeteer-core) library and tests the page after successfully login via [Google Chrome Lighthouse](https://developers.google.com/web/tools/lighthouse/).
+
+The results can be easily stored on disk or send to an remote endpoint via http.
 
 ## Getting Started
 To get a local copy up and running follow these simple steps.
@@ -117,7 +119,18 @@ yarn run watch
 Create a single executable for releasing a version.
 Please change the release os as needed in `package.json`.
 ```sh
-yarn run pkg
+$ yarn run pkg
+```
+
+### Docker
+Please feel free to start the app within a docker container. To simplify the setup, we have already included a `Dockerfile`, which is build upon `AlpineLinux`. Please map your local configuration file into the container, if you need the local results files, please to the same for the result directory.
+
+```bash
+$ docker build -t lightmelon:test Docker
+$ docker run --rm -it \
+  -v `/local/`config/lightmelon.yaml:/app/lightmelon/config/lightmelon.yaml \
+  -v `/local/`result:/app/lightmelon/result/ \
+  lightmelon:test
 ```
 
 ## Contributing
