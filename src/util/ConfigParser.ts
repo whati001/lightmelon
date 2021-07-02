@@ -299,7 +299,8 @@ const parseAuthConfig = (
       return undefined;
     }
     switch (authType) {
-      case "WinAdAuth": {
+      case "WinAdAuth":
+      case "WinUserAuth": {
         const winAuth = value as WinAdAuthConfig;
         const name = parseString(winAuth.name);
         if (!name) {
