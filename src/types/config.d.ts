@@ -29,23 +29,25 @@ export type AppConfig = {
   output: AppOutputConfig;
 };
 
-type BasicAuthConfig = {
+type AbstractAuthConfig = {
   type: string;
   name: string;
   impl: string;
 };
 
-export interface WinAdAuthConfig extends BasicAuthConfig {
+export interface WinAdAuthConfig extends AbstractAuthConfig {
   userMail: string;
   userPwd: string;
 }
 
-export interface BasicUserAuthConfig extends BasicAuthConfig {
+export type WinUserAuthConfig = WinAdAuthConfig;
+
+export interface BasicAuthConfig extends AbstractAuthConfig {
   user: string;
   pwd: string;
 }
 
-export type AuthConfig = WinAdAuthConfig | BasicUserAuthConfig;
+export type AuthConfig = WinAdAuthConfig | BasicAuthConfig;
 
 export type PageAuthConfig = AuthConfig[];
 
