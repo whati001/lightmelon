@@ -1,7 +1,7 @@
 ---
 app:
   browser:
-    executable: "/usr/bin/chromium"
+    executable: "/usr/bin/chromium-browser"
     headless: true
   worker:
     instances: 1

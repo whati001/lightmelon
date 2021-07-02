@@ -86,13 +86,12 @@ export default class ReportWorker {
             this.logger.info(
               `Store report as file with name ${name} to ${fileOutput.folder}`,
             );
-            createFolder(`${fileOutput.folder}/${subDir}`);
-            writeRelativeToApp(
-              `/${fileOutput.folder}/${subDir}/${name}`,
-              repResult,
-            );
+            const subDirPath = `${fileOutput.folder}/${subDir}`;
+            const filePath = `${subDirPath}/${name}`;
+            createFolder(subDirPath);
+            writeRelativeToApp(filePath, repResult);
             this.logger.info(
-              `Finished to store report as file with name ${name}`,
+              `Finished to store report as file to ${filePath}`,
             );
           } catch (e) {
             this.logger.error(

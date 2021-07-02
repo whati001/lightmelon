@@ -34,6 +34,10 @@ export default class ReportDriver {
     const options: LaunchOptions = {
       headless: this.config.app.browser.headless,
       executablePath: this.config.app.browser.executable,
+      args: [
+        "--no-sandbox",
+        "--disable-gpu"
+      ],
     };
 
     return options;
