@@ -23,9 +23,7 @@ const getLogger = (name: string): Result<Logger, string> => {
 
     // log object transport function
     const logToTransport = (logObject: ILogObject) => {
-      console.log("ANDI")
       stream.write(`${logObject.date}  ${logObject.logLevel} [${logObject.typeName} ${logObject.filePath}:${logObject.lineNumber}:${logObject.columnNumber}] ${logObject.argumentsArray.join(' ')}\n`);
-      // stream.write(JSON.stringify(logObject) + "\n");
     };
 
     rootLogger.attachTransport(
