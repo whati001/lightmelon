@@ -54,7 +54,7 @@ export default class ReportWorker {
       this.logger.warn(
         "Failed to start browser instance, skip RepTask report building",
       );
-      console.debug(e);
+      this.logger.error(e)
       return false;
     }
   }
@@ -243,7 +243,8 @@ export default class ReportWorker {
       return true;
     } catch (e) {
       this.logger.warn("Failed to create report, keep trying...");
-      console.debug(e);
+      this.logger.error(e);
+
       return false;
     }
   }

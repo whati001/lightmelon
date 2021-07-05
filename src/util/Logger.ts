@@ -17,12 +17,15 @@ const activeLogger = new Map<string, Logger>();
 
 const getLogger = (name: string): Result<Logger, string> => {
   if (0 === activeLogger.size || !activeLogger.has(MAIN_LOGGER_NAME)) {
+    console.log("create new logger instnace");
     const rootLogger = new Logger({ name: MAIN_LOGGER_NAME });
     activeLogger.set(MAIN_LOGGER_NAME, rootLogger);
 
     // log object transport function
     const logToTransport = (logObject: ILogObject) => {
-      stream.write(JSON.stringify(logObject) + "\n");
+      console.log("ANDI")
+      stream.write(`${logObject.date}  ${logObject.logLevel} [${logObject.typeName} ${logObject.filePath}:${logObject.lineNumber}:${logObject.columnNumber}] ${logObject.argumentsArray.join(' ')}\n`);
+      // stream.write(JSON.stringify(logObject) + "\n");
     };
 
     rootLogger.attachTransport(
@@ -39,12 +42,14 @@ const getLogger = (name: string): Result<Logger, string> => {
     );
   }
 
-  const childLogger = activeLogger.get(name);
-  if (childLogger) {
-    return new Ok(childLogger);
+  const logger = activeLogger.get(name);
+  console.log(`name: ${name} -> ${logger}`);
+  if (logger) {
+    return new Ok(logger);
   }
 
   const mainLogger = activeLogger.get(MAIN_LOGGER_NAME);
+  console.log(`name: ${name} -> ${mainLogger?.settings.name}`)
   if (mainLogger) {
     const childLogger = mainLogger.getChildLogger({ name: name });
     activeLogger.set(name, childLogger);
