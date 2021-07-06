@@ -41,13 +41,11 @@ const getLogger = (name: string): Result<Logger, string> => {
   }
 
   const logger = activeLogger.get(name);
-  console.log(`name: ${name} -> ${logger}`);
   if (logger) {
     return new Ok(logger);
   }
 
   const mainLogger = activeLogger.get(MAIN_LOGGER_NAME);
-  console.log(`name: ${name} -> ${mainLogger?.settings.name}`)
   if (mainLogger) {
     const childLogger = mainLogger.getChildLogger({ name: name });
     activeLogger.set(name, childLogger);

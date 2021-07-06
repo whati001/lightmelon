@@ -70,6 +70,7 @@ export default class MsPowerBi implements Auth {
         "Failed to create a new page for user authentication",
         new Error("Brower failed to open new page"),
       );
+      LOGGER.error(JSON.stringify(e));
       return false;
     }
   }
@@ -93,6 +94,7 @@ export default class MsPowerBi implements Auth {
         "Failed to create a new page for user authentication",
         new Error("Brower failed to open new page"),
       );
+      LOGGER.error(JSON.stringify(e));
       return false;
     }
   }

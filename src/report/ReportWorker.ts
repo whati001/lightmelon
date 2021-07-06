@@ -54,7 +54,7 @@ export default class ReportWorker {
       this.logger.warn(
         "Failed to start browser instance, skip RepTask report building",
       );
-      this.logger.error(e)
+      this.logger.error(JSON.stringify(e));
       return false;
     }
   }
@@ -98,7 +98,7 @@ export default class ReportWorker {
               `Failed to store report as file with name ${name}`,
               null,
             );
-            this.logger.error(e, null);
+            this.logger.error(JSON.stringify(e));
           }
           break;
         }
@@ -143,11 +143,12 @@ export default class ReportWorker {
         output: ["html", "json"],
         port: (new URL(this.browser.wsEndpoint())).port,
       };
-      const runnerResult = await lighthouse(url, lighthouseConfig);
+      // const runnerResult = await lighthouse(url, lighthouseConfig);
       await this.browser.close();
       this.browser = undefined;
 
-      return runnerResult;
+      // return runnerResult;
+      return undefined;
     } else {
       this.logger.warn(
         "No active browser instance found, skip current report creation",
@@ -243,7 +244,7 @@ export default class ReportWorker {
       return true;
     } catch (e) {
       this.logger.warn("Failed to create report, keep trying...");
-      this.logger.error(e);
+      this.logger.error(JSON.stringify(e));
 
       return false;
     }
