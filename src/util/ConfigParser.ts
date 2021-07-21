@@ -50,7 +50,7 @@ const logError = (text: string) => {
  * @returns type t on sucess, if not found null, if wrong type undefined
  */
 const parseValueType = <T>(value: any, type: string): T | undefined | null => {
-  if (value == undefined || value == null) {
+  if (value == undefined) {
     return null;
   }
   if (!(typeof value === type)) {

@@ -23,7 +23,7 @@ export default class MsPowerBi implements Auth {
       return true;
     }
     LOGGER.warn("Failed to submit user mail to main portal: " + LOGIN_URL);
-    return false
+    return false;
   }
 
   public async login(
@@ -76,7 +76,7 @@ export default class MsPowerBi implements Auth {
   }
   public async isLoggedIn(browser: puppeteer.Browser): Promise<boolean> {
     try {
-      LOGGER.info("Check if user authenticated against PowerBi")
+      LOGGER.info("Check if user authenticated against PowerBi");
       const page = await browser.newPage();
       await page.goto(VALIDATE_URL);
       await page.waitForTimeout(WAIT_TIME);

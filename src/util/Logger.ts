@@ -17,7 +17,6 @@ const activeLogger = new Map<string, Logger>();
 
 const getLogger = (name: string): Result<Logger, string> => {
   if (0 === activeLogger.size || !activeLogger.has(MAIN_LOGGER_NAME)) {
-    console.log("create new logger instnace");
     const rootLogger = new Logger({ name: MAIN_LOGGER_NAME });
     activeLogger.set(MAIN_LOGGER_NAME, rootLogger);
 

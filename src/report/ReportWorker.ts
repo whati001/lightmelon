@@ -143,12 +143,11 @@ export default class ReportWorker {
         output: ["html", "json"],
         port: (new URL(this.browser.wsEndpoint())).port,
       };
-      // const runnerResult = await lighthouse(url, lighthouseConfig);
+      const runnerResult = await lighthouse(url, lighthouseConfig);
       await this.browser.close();
       this.browser = undefined;
 
-      // return runnerResult;
-      return undefined;
+      return runnerResult;
     } else {
       this.logger.warn(
         "No active browser instance found, skip current report creation",
@@ -213,7 +212,9 @@ export default class ReportWorker {
       const repResult = await this._getLigthouseReport(task.page.url);
       if (!repResult) {
         this.logger.warn("Failed to create report, skip storing results");
+        return false;
       }
+
       this.logger.info(
         `Created report for url ${task.page.url} successfully`,
       );
