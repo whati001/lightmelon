@@ -22,7 +22,7 @@ const getLogger = (name: string): Result<Logger, string> => {
 
     // log object transport function
     const logToTransport = (logObject: ILogObject) => {
-      stream.write(JSON.stringify(logObject) + "\n");
+      stream.write(`${logObject.date}  ${logObject.logLevel} [${logObject.typeName} ${logObject.filePath}:${logObject.lineNumber}:${logObject.columnNumber}] ${logObject.argumentsArray.join(' ')}\n`);
     };
 
     rootLogger.attachTransport(
@@ -39,9 +39,9 @@ const getLogger = (name: string): Result<Logger, string> => {
     );
   }
 
-  const childLogger = activeLogger.get(name);
-  if (childLogger) {
-    return new Ok(childLogger);
+  const logger = activeLogger.get(name);
+  if (logger) {
+    return new Ok(logger);
   }
 
   const mainLogger = activeLogger.get(MAIN_LOGGER_NAME);

@@ -1,7 +1,7 @@
 ---
 app:
   browser:
-    executable: "/usr/bin/chromium-browser"
+    executable: "/usr/bin/chromium"
     headless: true
   worker:
     instances: 1
@@ -9,9 +9,9 @@ app:
   output:
     - type: "file"
       folder: "./result/"
-    - type: "http"
-      method: "PUT"
-      url: "https://localhost:2711/some/endpoint/{filename}"
+    # - type: "http"
+    #   method: "PUT"
+    #   url: "https://localhost:2711/some/endpoint/{filename}"
 auth:
   - name: "WinADPowerBi"
     type: "WinAdAuth"

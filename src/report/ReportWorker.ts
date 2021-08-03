@@ -54,7 +54,7 @@ export default class ReportWorker {
       this.logger.warn(
         "Failed to start browser instance, skip RepTask report building",
       );
-      console.debug(e);
+      this.logger.error(JSON.stringify(e));
       return false;
     }
   }
@@ -98,7 +98,7 @@ export default class ReportWorker {
               `Failed to store report as file with name ${name}`,
               null,
             );
-            this.logger.error(e, null);
+            this.logger.error(JSON.stringify(e));
           }
           break;
         }
@@ -212,7 +212,9 @@ export default class ReportWorker {
       const repResult = await this._getLigthouseReport(task.page.url);
       if (!repResult) {
         this.logger.warn("Failed to create report, skip storing results");
+        return false;
       }
+
       this.logger.info(
         `Created report for url ${task.page.url} successfully`,
       );
@@ -243,7 +245,8 @@ export default class ReportWorker {
       return true;
     } catch (e) {
       this.logger.warn("Failed to create report, keep trying...");
-      console.debug(e);
+      this.logger.error(JSON.stringify(e));
+
       return false;
     }
   }
