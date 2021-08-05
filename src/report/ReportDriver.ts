@@ -34,9 +34,14 @@ export default class ReportDriver {
     const options: LaunchOptions = {
       headless: this.config.app.browser.headless,
       executablePath: this.config.app.browser.executable,
+      defaultViewport: {
+        width: 1350,
+        height: 940,
+      },
       args: [
         "--no-sandbox",
-        "--disable-gpu"
+        "--disable-gpu",
+        "--window-size=1350,940",
       ],
     };
 
